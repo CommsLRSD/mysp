@@ -285,6 +285,148 @@
 
 	})();
 
+/* ══════════════════════════════════════════════════════════════════
+	   Section accordion for narrative (story) sections.
+	   All sections collapse except the intro, so the page loads as
+	   a clean overview. Click the heading row or the chevron button
+	   to expand.  State is persisted in sessionStorage so it survives
+	   in-page navigation but resets on a fresh load.
+	   ══════════════════════════════════════════════════════════════════ */
+	(function ()
+	{
+		var COLLAPSED_BY_DEFAULT = {
+			'section-change'      : true,
+			'section-learning'    : true,
+			'section-ahead'       : true,
+			'section-foundations' : true,
+			'section-glossary'    : true,
+			'section-reply'       : true
+		};
+
+		function makeChevron()
+		{
+			var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+			svg.setAttribute('width', '12');
+			svg.setAttribute('height', '12');
+			svg.setAttribute('viewBox', '0 0 12 12');
+			svg.setAttribute('aria-hidden', 'true');
+			svg.setAttribute('focusable', 'false');
+			var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+			path.setAttribute('d', 'M2 4l4 4 4-4');
+			path.setAttribute('fill', 'none');
+			path.setAttribute('stroke', 'currentColor');
+			path.setAttribute('stroke-width', '2');
+			path.setAttribute('stroke-linecap', 'round');
+			path.setAttribute('stroke-linejoin', 'round');
+			svg.appendChild(path);
+			return svg;
+		}
+
+		function setExpanded(section, btn, expanded)
+		{
+			section.classList.toggle('section-collapsed', !expanded);
+			btn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+			btn.setAttribute('aria-label', (expanded ? 'Collapse' : 'Expand') + ' this section');
+			/* Trigger enter animation only when actually expanding */
+			var body = section.querySelector('.section-body-collapsible');
+			if (body)
+			{
+				if (expanded)
+				{
+					body.classList.remove('section-body-entering');
+					void body.offsetWidth; /* force reflow so animation replays */
+					body.classList.add('section-body-entering');
+				}
+				else
+				{
+					body.classList.remove('section-body-entering');
+				}
+			}
+			try { sessionStorage.setItem('sc-' + section.id, expanded ? '1' : '0'); } catch (e) {}
+		}
+
+		document.querySelectorAll('.story-section').forEach(function (section)
+		{
+			if (!section.id) { return; }
+
+			/* Find eyebrow and heading as direct children */
+			var eyebrow = null, heading = null;
+			Array.prototype.forEach.call(section.children, function (child)
+			{
+				if (!eyebrow && child.classList.contains('story-eyebrow')) { eyebrow = child; }
+				if (!heading && child.tagName === 'H2' && child.classList.contains('story-title')) { heading = child; }
+			});
+			if (!heading) { return; }
+
+			/* ── Build header row ── */
+			var hd     = document.createElement('div');
+			hd.className = 'story-section-hd';
+
+			var hdText = document.createElement('div');
+			hdText.className = 'story-section-hd-text';
+			if (eyebrow) { hdText.appendChild(eyebrow); }   /* moves node */
+			hdText.appendChild(heading);                     /* moves node */
+			hd.appendChild(hdText);
+
+			var btn    = document.createElement('button');
+			btn.className = 'section-toggle-btn';
+			btn.setAttribute('type', 'button');
+			btn.setAttribute('aria-label', 'Expand or collapse this section');
+			btn.setAttribute('aria-controls', 'sbody-' + section.id);
+			btn.appendChild(makeChevron());
+			hd.appendChild(btn);
+
+			section.insertBefore(hd, section.firstChild);
+
+			/* ── Wrap remaining children in collapsible body ── */
+			var bodyWrap = document.createElement('div');
+			bodyWrap.className = 'section-body-collapsible';
+			bodyWrap.id = 'sbody-' + section.id;
+			/* Snapshot the list before we start moving nodes */
+			var remaining = Array.prototype.slice.call(section.children);
+			remaining.forEach(function (child) {
+				if (child !== hd) { bodyWrap.appendChild(child); }
+			});
+			section.appendChild(bodyWrap);
+
+			/* ── Determine initial state ── */
+			var saved = null;
+			try { saved = sessionStorage.getItem('sc-' + section.id); } catch (e) {}
+			var collapsed = (saved !== null) ? (saved === '0') : !!COLLAPSED_BY_DEFAULT[section.id];
+			setExpanded(section, btn, !collapsed);
+
+			/* ── Interaction ── */
+			hd.addEventListener('click', function (e)
+			{
+				/* Don't intercept clicks on links inside the heading row */
+				if (e.target.tagName === 'A' || (e.target.closest && e.target.closest('a'))) { return; }
+				setExpanded(section, btn, section.classList.contains('section-collapsed'));
+			});
+		});
+
+		/* ── Utility: expand the story-section containing an element ── */
+		window.MYSP = window.MYSP || {};
+		window.MYSP.expandSection = function (el)
+		{
+			var section = el && el.closest && el.closest('.story-section');
+			if (!section || !section.classList.contains('section-collapsed')) { return; }
+			var btn = section.querySelector('.section-toggle-btn');
+			if (btn) { setExpanded(section, btn, true); }
+		};
+
+		/* ── Auto-expand when a URL hash targets content inside a collapsed section ── */
+		function expandForHash()
+		{
+			var hash = location.hash;
+			if (!hash || hash.length < 2) { return; }
+			/* Use getElementById to avoid CSS-selector special-character errors */
+			var target = document.getElementById(hash.slice(1));
+			if (target && window.MYSP.expandSection) { window.MYSP.expandSection(target); }
+		}
+		window.addEventListener('hashchange', expandForHash);
+		expandForHash();
+	})();
+
 		/* ══ Mobile orientation: sticky section bar + drawer (v43) ══ */
 		(function () {
 			var bar     = document.getElementById('section-bar');
@@ -505,6 +647,8 @@
 		{
 			var dt = document.getElementById(id);
 			if (!dt) { return; }
+			/* Expand the parent story-section if it is currently collapsed */
+			if (window.MYSP && window.MYSP.expandSection) { window.MYSP.expandSection(dt); }
 			var group = dt.closest('details.glossary-group');
 			if (group && !group.open) { group.open = true; }
 			document.querySelectorAll('.glossary-list dt.gloss-hit')

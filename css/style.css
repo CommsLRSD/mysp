@@ -1082,3 +1082,135 @@
 	}
 
 	@media print { #section-bar, #nav-scrim, #nav-toggle, #nav-close { display: none !important; } }
+
+/* ══ Section cards & accordion (UI refresh) ══════════════════════════
+   Story sections become card-like panels on the page's grey canvas,
+   each collapsible so readers see only what they choose to open.
+   ══════════════════════════════════════════════════════════════════ */
+
+/* Card treatment for narrative sections */
+.story-section {
+	background: var(--white);
+	border-radius: 14px;
+	box-shadow: var(--shadow-light);
+	padding: 1.75rem 2.5rem 1.5rem;
+	scroll-margin-top: 2rem;
+	max-width: calc(var(--content-max) - 4rem);
+	margin: 0 auto 1.75rem;
+}
+
+/* Subtle per-section background tints for visual compartmentalisation */
+#section-change     { background: #f8fafc; }
+#section-learning   { background: #f9f8f5; }
+#section-foundations { background: #f7fbf4; }
+#section-glossary   { background: #f9f9fc; }
+
+/* Very-light priority zone tints for wide-sections */
+#section-belonging   { background: #f8f6f4; }
+#section-mastery     { background: #fdf9f5; }
+#section-independence { background: #f6faf2; }
+#section-generosity  { background: #fdf5f7; }
+
+/* ── Section heading row (injected by JS) ── */
+.story-section-hd {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 0.75rem;
+	cursor: pointer;
+	/* Prevent text selection on click */
+	user-select: none;
+	-webkit-user-select: none;
+}
+.story-section-hd-text { flex: 1; min-width: 0; }
+
+/* ── Toggle button ── */
+.section-toggle-btn {
+	flex-shrink: 0;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 30px; height: 30px;
+	margin-top: 0.2rem;
+	border: 1.5px solid rgba(38,78,116,0.22);
+	border-radius: 50%;
+	background: rgba(38,78,116,0.06);
+	color: var(--primary);
+	cursor: pointer;
+	transition: background 0.18s;
+	padding: 0;
+}
+.section-toggle-btn:hover { background: rgba(38,78,116,0.14); }
+.section-toggle-btn:focus-visible {
+	outline: 3px solid var(--primary); outline-offset: 2px;
+}
+.story-section-hd:hover .section-toggle-btn {
+	background: rgba(38,78,116,0.11);
+}
+.section-toggle-btn svg {
+	transition: transform 0.25s ease;
+}
+.story-section.section-collapsed .section-toggle-btn svg {
+	transform: rotate(-90deg);
+}
+
+/* ── Collapsible body ── */
+.section-body-collapsible { overflow: hidden; }
+.story-section.section-collapsed .section-body-collapsible { display: none; }
+
+/* Expand animation (only fires when re-shown) */
+@keyframes sectionBodyIn {
+	from { opacity: 0; transform: translateY(-6px); }
+	to   { opacity: 1; transform: translateY(0); }
+}
+.section-body-collapsible {
+	animation: sectionBodyIn 0.22s ease;
+}
+/* When re-collapsed there should be no animation */
+.story-section.section-collapsed .section-body-collapsible {
+	animation: none;
+}
+
+/* ── Constrain story prose width for readability ── */
+.story-section-hd ~ .section-body-collapsible .story-body p,
+.story-body p {
+	max-width: 74ch;
+}
+
+/* ── Responsive overrides ── */
+@media (max-width: 900px) {
+	.story-section {
+		margin: 0 1rem 1.25rem;
+		padding: 1.4rem 1.5rem 1.25rem;
+		max-width: none;
+		border-radius: 10px;
+	}
+}
+@media (max-width: 768px) {
+	.story-section {
+		margin: 0 0.5rem 1rem;
+		padding: 1rem 1rem 1rem;
+		border-radius: 8px;
+	}
+}
+/* Respect reduced-motion: drop the body-in animation */
+@media (prefers-reduced-motion: reduce) {
+	.section-body-collapsible { animation: none !important; }
+	.section-toggle-btn svg { transition: none !important; }
+}
+
+/* ── Print: always show all section bodies ── */
+@media print {
+	.story-section {
+		background: #fff !important;
+		box-shadow: none;
+		border: 1px solid #ddd;
+		border-radius: 0;
+		margin: 0 0 1rem;
+		padding: 0.75rem 0;
+		break-inside: avoid;
+	}
+	.section-body-collapsible { display: block !important; animation: none !important; }
+	.section-toggle-btn { display: none !important; }
+	.story-section-hd { cursor: default; user-select: auto; }
+}

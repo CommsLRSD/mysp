@@ -1444,7 +1444,9 @@ section.single-section-active {
 }
 .ptb-search-input:focus {
 	border-color: var(--primary);
-	outline: none;
+	/* Transparent rather than none: forced-colours modes repaint it, and the
+	   box-shadow below is invisible there. */
+	outline: 2px solid transparent;
 	box-shadow: 0 0 0 3px rgba(38, 78, 116, 0.15);
 }
 .ptb-clear {

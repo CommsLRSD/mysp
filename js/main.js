@@ -864,6 +864,7 @@
 	var sourceData = Array.prototype.slice.call(
 		document.querySelectorAll('.filter-chip[data-filter-type="datahub"]'));
 	var toolbars = [];
+	var totalActions = document.querySelectorAll('.scorecard').length;
 
 	function labelOf(el)
 	{
@@ -921,7 +922,7 @@
 		var input = document.createElement('input');
 		input.type = 'search';
 		input.className = 'ptb-search-input';
-		input.placeholder = 'Search all 25 actions\u2026';
+		input.placeholder = 'Search all ' + totalActions + ' actions\u2026';
 		input.autocomplete = 'off';
 		input.id = 'ptb-search-' + section.id;
 		searchLabel.setAttribute('for', input.id);

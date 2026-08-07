@@ -1257,8 +1257,61 @@ section.single-section-active {
 	gap: 1.75rem;
 	border-bottom: 1px solid var(--rule);
 }
+.wide-hero-photo {
+	position: relative;
+	overflow: hidden;
+	align-items: flex-end;
+	min-height: clamp(20rem, 52vw, 31rem);
+	padding: clamp(2rem, 4vw, 3rem);
+	background-color: #1e2f3f;
+	background-image: url('/mysp/public/images/COD_0773.jpg');
+	background-size: cover;
+	background-position: center;
+	border-bottom: none;
+	border-radius: 0 0 24px 24px;
+}
+.wide-hero-photo::before {
+	content: '';
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(135deg, rgba(16, 26, 38, 0.82), rgba(16, 26, 38, 0.58));
+}
+.wide-hero-photo .wide-hero-icon,
+.wide-hero-photo .wide-hero-text {
+	position: relative;
+	z-index: 1;
+}
+.wide-hero-photo .wide-hero-icon {
+	width: clamp(4.75rem, 10vw, 6rem);
+	padding: 0.75rem;
+	background: rgba(255, 255, 255, 0.12) !important;
+	border: 1px solid rgba(255, 255, 255, 0.24) !important;
+	border-radius: 1.25rem;
+	backdrop-filter: blur(4px);
+}
+.wide-hero-photo .wide-hero-text {
+	max-width: min(38rem, 100%);
+	padding: 1.5rem 1.75rem;
+	background: rgba(16, 26, 38, 0.78);
+	border-radius: 1.5rem;
+	box-shadow: 0 1.1rem 2.75rem rgba(0, 0, 0, 0.2);
+}
+.wide-hero-photo .wide-hero-label,
+.wide-hero-photo .wide-hero-title,
+.wide-hero-photo .wide-hero-sub {
+	color: #fff;
+}
+.wide-hero-photo .wide-hero-label {
+	color: rgba(255, 255, 255, 0.78);
+}
 .wide-hero-title { font-size: 2.5rem; }
 .wide-hero-sub { font-size: 0.95rem; color: #55606c; }
+.wide-hero-photo .wide-hero-sub { color: rgba(255, 255, 255, 0.92); }
+.wide-hero-photo .hero-stamp {
+	color: #fff;
+	background: rgba(255, 255, 255, 0.14);
+	border-color: rgba(255, 255, 255, 0.34);
+}
 
 /* ── (2) Imagery keeps its aspect ratio ── */
 .story-break-image {
@@ -1303,23 +1356,6 @@ section.single-section-active {
 .story-body p,
 .story-body li { max-width: none; }
 .story-body p { font-size: 1.02rem; line-height: 1.78; }
-
-/* Intro image moved into prose flow: right-aligned wrap on larger screens,
-   stacked on mobile. Keep at least ~35ch for wrapped text. */
-#section-intro .intro-sustainability-image {
-	float: right;
-	width: clamp(13rem, 36%, 18rem);
-	height: auto;
-	margin: 0.15rem 0 1rem 1.25rem;
-	border-radius: 12px;
-	border: 1px solid rgba(38, 78, 116, 0.14);
-	box-shadow: var(--shadow-light);
-}
-#section-intro .story-body::after {
-	content: "";
-	display: table;
-	clear: both;
-}
 
 /* Stacked panels read at a slightly wider measure than body copy. */
 .pattern-list,
@@ -1525,7 +1561,6 @@ section.single-section-active {
 	}
 	.wide-hero { padding: 1.75rem 1.5rem 1.25rem; }
 	.ptb-label { flex-basis: 100%; }
-	#section-intro .intro-sustainability-image { width: min(14rem, 45%); }
 }
 @media (max-width: 768px) {
 	.story-section,
@@ -1535,13 +1570,6 @@ section.single-section-active {
 	}
 	.story-body p { font-size: 1rem; }
 	.side-panel { padding: 0.8rem; }
-	#section-intro .intro-sustainability-image {
-		float: none;
-		display: block;
-		width: 100%;
-		max-width: 20rem;
-		margin: 0.35rem auto 1rem;
-	}
 }
 
 @media print {

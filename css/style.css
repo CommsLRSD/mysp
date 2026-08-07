@@ -1219,3 +1219,318 @@ section.single-section-active {
 	section.single-section-hidden { display: block !important; }
 	.section-next-nav { display: none !important; }
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   v83 LAYOUT REFRESH
+   Four problems this block solves, recorded so nobody undoes it by
+   accident:
+   (1) The masthead sat in its own white card, which read as a widget
+       rather than as the title of the page. It is now unboxed and
+       divided from the content by a rule.
+   (2) Photographs were forced into 280px letterboxes with object-fit
+       cover, so faces and context were cropped away. Every content
+       image now keeps its own aspect ratio and is capped by width.
+   (3) Prose was held at a readable measure inside a much wider card,
+       leaving a dead column of white to the right of every paragraph.
+       The measure is now CENTRED in the card and wide blocks (grids,
+       card decks) still use the full width, so the leftover space is
+       symmetrical margin instead of a one-sided void.
+   (4) Sections, and the blocks inside them, ran together. Sections are
+       cards on the grey canvas; blocks inside a section are separated
+       by rules and consistent rhythm.
+   ══════════════════════════════════════════════════════════════════ */
+
+:root {
+	--measure: 42rem;        /* prose column */
+	--measure-wide: 60rem;   /* stacked panels: patterns, glossary, data */
+	--rule: rgba(38, 78, 116, 0.13);
+}
+
+/* ── (1) Masthead, unboxed ── */
+.wide-hero {
+	background: transparent;
+	box-shadow: none;
+	border-radius: 0;
+	max-width: var(--content-max);
+	margin: 0 auto 1.75rem;
+	padding: 2.5rem 2.5rem 1.6rem;
+	gap: 1.75rem;
+	border-bottom: 1px solid var(--rule);
+}
+.wide-hero-title { font-size: 2.5rem; }
+.wide-hero-sub { font-size: 0.95rem; color: #55606c; }
+
+/* ── (2) Imagery keeps its aspect ratio ── */
+.story-break-image {
+	max-width: var(--measure);
+	margin: 1.6rem auto 1.8rem;
+}
+.story-break-image img {
+	width: 100%;
+	height: auto;
+	max-height: none;
+	object-fit: contain;
+}
+.detail-img {
+	width: 100%;
+	max-width: 420px;
+	height: auto;
+	max-height: none;
+	object-fit: contain;
+	background: #fff;
+}
+
+/* ── (3) Centred reading measure, full-width blocks ── */
+.story-section {
+	max-width: var(--content-max);
+	padding: 2rem 2.5rem 1.75rem;
+	border: 1px solid var(--rule);
+}
+.story-section > .story-eyebrow,
+.story-section > .story-title,
+.story-section > .story-body,
+.story-section > .gloss-return,
+.story-section > .doc-links,
+.story-section > .closing-frame,
+.story-section > .empty-note,
+.story-section > p,
+.story-section > ul,
+.story-section > ol {
+	max-width: var(--measure);
+	margin-left: auto;
+	margin-right: auto;
+}
+.story-body p,
+.story-body li { max-width: none; }
+.story-body p { font-size: 1.02rem; line-height: 1.78; }
+
+/* Stacked panels read at a slightly wider measure than body copy. */
+.pattern-list,
+.watch-data-panel,
+.glossary-group,
+.reply-box,
+.gloss-return {
+	max-width: var(--measure-wide);
+	margin-left: auto;
+	margin-right: auto;
+}
+
+/* ── (4) Division between sections and within them ── */
+.story-section,
+.wide-section {
+	border-radius: 16px;
+	box-shadow: var(--shadow-light);
+}
+.wide-section {
+	background: var(--white);
+	border: 1px solid var(--rule);
+	padding: 2rem 2.5rem 2.25rem;
+	max-width: var(--content-max);
+	margin: 0 auto 1.75rem;
+}
+.wide-section .section-intro-body {
+	max-width: var(--measure);
+	margin: 0 auto 1.5rem;
+}
+
+/* A rule above every block-level group inside a narrative section. */
+.stage-legend,
+.change-grid,
+.themes-grid,
+.pattern-list,
+.watch-data-panel,
+.story-section .glossary-group:first-of-type {
+	margin-top: 1.6rem;
+	padding-top: 1.5rem;
+	border-top: 1px solid var(--rule);
+}
+.story-body .record-tier {
+	margin-top: 1.7rem;
+	padding-top: 1.25rem;
+	border-top: 1px solid var(--rule);
+}
+.story-body .record-tier:first-child { margin-top: 0; padding-top: 0; border-top: 0; }
+.story-note {
+	margin-top: 1.4rem;
+	padding: 0.15rem 0 0.15rem 1rem;
+	border-left: 3px solid rgba(38, 78, 116, 0.22);
+}
+.closing-frame { margin-top: 1.6rem; }
+.story-section > .story-title { margin-bottom: 1.25rem; }
+.section-next-nav {
+	border-top: 1px solid var(--rule);
+	padding-top: 1.1rem;
+	margin-top: 1.75rem;
+}
+
+/* ── In-page priority toolbar ──
+   The sidebar filters are easy to miss, and on a phone they live behind
+   a drawer. Every priority section therefore carries the same controls
+   above its card deck. The toolbar does not own any state: it proxies
+   clicks to the sidebar controls and re-reads them after every filter
+   pass, so there is still exactly one source of truth. */
+.priority-toolbar {
+	margin: 0 0 1.75rem;
+	padding: 1rem 1.15rem 1.1rem;
+	background: rgba(38, 78, 116, 0.04);
+	border: 1px solid var(--rule);
+	border-radius: 12px;
+}
+.ptb-head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 0.5rem;
+	margin-bottom: 0.8rem;
+	padding-bottom: 0.65rem;
+	border-bottom: 1px solid var(--rule);
+}
+.ptb-title {
+	font-family: var(--header-font);
+	font-size: 0.82rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.09em;
+	color: var(--primary);
+	margin: 0;
+}
+.ptb-count { font-size: 0.8rem; color: #4a5560; margin: 0; }
+.ptb-count strong { color: var(--primary); }
+.ptb-row {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.4rem;
+	margin-bottom: 0.55rem;
+}
+.ptb-label {
+	flex: 0 0 6.5rem;
+	font-size: 0.68rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	color: #5a6675;
+}
+.ptb-btn {
+	font-family: var(--body-font);
+	font-size: 0.78rem;
+	font-weight: 600;
+	color: var(--primary);
+	background: var(--white);
+	border: 1px solid rgba(38, 78, 116, 0.22);
+	border-radius: 999px;
+	padding: 0.28rem 0.8rem;
+	cursor: pointer;
+	transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.ptb-btn:hover { background: rgba(38, 78, 116, 0.09); }
+.ptb-btn.active {
+	background: var(--primary);
+	border-color: var(--primary);
+	color: #fff;
+}
+.ptb-search { margin-bottom: 0; }
+.ptb-search-input {
+	flex: 1 1 12rem;
+	min-width: 0;
+	padding: 0.4rem 0.7rem;
+	font-family: var(--body-font);
+	font-size: 0.82rem;
+	color: #223;
+	background: var(--white);
+	border: 1px solid rgba(38, 78, 116, 0.22);
+	border-radius: 8px;
+}
+.ptb-search-input:focus {
+	border-color: var(--primary);
+	/* Transparent rather than none: forced-colours modes repaint it, and the
+	   box-shadow below is invisible there. */
+	outline: 2px solid transparent;
+	box-shadow: 0 0 0 3px rgba(38, 78, 116, 0.15);
+}
+.ptb-clear {
+	font-size: 0.74rem;
+	font-weight: 700;
+	font-family: var(--body-font);
+	color: #7a2f26;
+	background: rgba(179, 53, 40, 0.08);
+	border: 1px solid rgba(179, 53, 40, 0.3);
+	border-radius: 999px;
+	padding: 0.3rem 0.75rem;
+	cursor: pointer;
+}
+.ptb-clear:hover { background: rgba(179, 53, 40, 0.16); }
+.ptb-clear[hidden] { display: none; }
+
+/* ── Sidebar panels ── */
+#side-nav { background: #eef1f5; }
+.side-nav-inner { gap: 1rem; }
+.side-panel {
+	background: var(--white);
+	border: 1px solid var(--rule);
+	border-radius: 12px;
+	padding: 0.95rem 0.95rem 1rem;
+}
+.side-panel-title {
+	font-family: var(--header-font);
+	font-size: 0.72rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.11em;
+	color: rgba(38, 78, 116, 0.7);
+	margin: 0 0 0.55rem;
+}
+.side-panel-note {
+	font-size: 0.72rem;
+	line-height: 1.55;
+	color: #5a6c7d;
+	margin: -0.2rem 0 0.75rem;
+}
+.side-panel-actions .side-search { margin-bottom: 0.85rem; }
+.side-panel-actions .side-collapse { padding-top: 0.75rem; border-top: 1px solid var(--rule); }
+.side-panel-actions .side-collapse:first-of-type { padding-top: 0; border-top: 0; }
+.side-panel-actions .clear-filters { margin-top: 0.85rem; }
+.side-panel-translate { background: transparent; border: 0; padding: 0; }
+.side-logo-block { border-bottom: 0; padding-bottom: 0.25rem; }
+
+/* ── Responsive ── */
+@media (max-width: 1200px) {
+	:root { --measure-wide: 52rem; }
+}
+@media (max-width: 900px) {
+	.story-section,
+	.wide-section {
+		margin: 0 1rem 1.25rem;
+		padding: 1.4rem 1.5rem 1.25rem;
+		max-width: none;
+		border-radius: 12px;
+	}
+	.wide-hero { padding: 1.75rem 1.5rem 1.25rem; }
+	.ptb-label { flex-basis: 100%; }
+}
+@media (max-width: 768px) {
+	.story-section,
+	.wide-section {
+		margin: 0 0.75rem 1rem;
+		padding: 1.1rem 1.1rem 1.1rem;
+	}
+	.story-body p { font-size: 1rem; }
+	.side-panel { padding: 0.8rem; }
+}
+
+@media print {
+	.wide-hero { border-bottom: 1px solid #ccd; }
+	.priority-toolbar { display: none !important; }
+	.wide-section { border: 1px solid #ddd; box-shadow: none; margin: 0 0 1rem; padding: 0.75rem 0; }
+}
+
+/* v83 polish: even card rows, and lists that match the prose they sit in. */
+.cards-grid { align-items: stretch; }
+.story-section > ul.detail-list li,
+.story-section > ol li {
+	font-size: 0.98rem;
+	line-height: 1.75;
+	margin-bottom: 0.45rem;
+}
+.wide-section-header { padding-bottom: 1rem; }

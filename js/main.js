@@ -308,9 +308,17 @@
 	{
 		var sections = Array.prototype.slice.call(document.querySelectorAll('section[id^="section-"]'));
 		if (!sections.length) { return; }
+		var NEXT_LABEL_PREFIX = 'Next: ';
 
-		var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 		var activeSection = null;
+		var imageBasePath = '/mysp';
+		var cssLink = document.querySelector('link[href*="/css/style.css"]');
+		if (cssLink && cssLink.getAttribute('href'))
+		{
+			var href = cssLink.getAttribute('href');
+			var base = href.replace(/\/css\/style\.css(?:\?.*)?$/, '');
+			if (base) { imageBasePath = base; }
+		}
 
 		function isSectionVisible(section)
 		{
@@ -347,13 +355,13 @@
 				if (!btn) { return; }
 				if (i < visible.length - 1)
 				{
+					btn.hidden = false;
 					btn.disabled = false;
-					btn.textContent = 'Next: ' + sectionTitle(visible[i + 1]);
+					btn.textContent = NEXT_LABEL_PREFIX + sectionTitle(visible[i + 1]);
 				}
 				else
 				{
-					btn.disabled = true;
-					btn.textContent = 'You are at the final section';
+					btn.hidden = true;
 				}
 			});
 		}
@@ -375,18 +383,27 @@
 				var active = item === target && isSectionVisible(item);
 				item.classList.toggle('single-section-hidden', !active);
 				item.classList.toggle('single-section-active', active);
-				item.setAttribute('aria-hidden', active ? 'false' : 'true');
+				item.inert = !active;
+				if (active) item.removeAttribute('aria-hidden');
+				else item.setAttribute('aria-hidden', 'true');
 			});
 			activeSection = target;
 			updateJumpState();
 			updateNextButtons();
 			if (options.updateHash !== false)
 			{
-				if (location.hash !== ('#' + target.id)) { history.replaceState(null, '', '#' + target.id); }
+				if (location.hash !== ('#' + target.id))
+				{
+					if (options.historyMode === 'push') history.pushState(null, '', '#' + target.id);
+					else history.replaceState(null, '', '#' + target.id);
+				}
 			}
 			if (options.scroll !== false)
 			{
-				target.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+				target.scrollIntoView({
+					behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+					block: 'start'
+				});
 			}
 		}
 
@@ -399,7 +416,7 @@
 			var figure = document.createElement('figure');
 			figure.className = 'story-break-image';
 			var img = document.createElement('img');
-			img.src = '/mysp/public/images/' + imageName;
+			img.src = imageBasePath + '/public/images/' + imageName;
 			img.alt = altText;
 			img.loading = 'lazy';
 			img.decoding = 'async';
@@ -429,7 +446,7 @@
 					var visible = visibleSections();
 					var idx = visible.indexOf(section);
 					if (idx === -1 || idx >= visible.length - 1) { return; }
-					setActiveSection(visible[idx + 1], { updateHash: true, scroll: true });
+					setActiveSection(visible[idx + 1], { updateHash: true, scroll: true, historyMode: 'push' });
 				});
 				nav.appendChild(btn);
 				var toTop = section.querySelector('.totop');
@@ -447,9 +464,29 @@
 			return node.closest ? node.closest('section[id^="section-"]') : null;
 		}
 
-		appendSectionImage('section-change', 'nutrition.jpg', 'Students sharing a meal in school', 'Nutrition programs are one of the most visible changes on the dashboard.');
-		appendSectionImage('section-foundations', 'indigenous-ed.jpg', 'Classroom activity grounded in Indigenous learning', 'Closing equity gaps remains the central foundation for the next cycle.');
-		appendSectionImage('section-ahead', 'sustainability.jpg', 'Students collaborating outdoors', 'The next cycle focuses on sustainable systems that hold over time.');
+		[
+			{
+				id: 'section-change',
+				file: 'nutrition.jpg',
+				alt: 'Students sharing a meal in school',
+				caption: 'Nutrition programs are one of the most visible changes on the dashboard.'
+			},
+			{
+				id: 'section-foundations',
+				file: 'indigenous-ed.jpg',
+				alt: 'Classroom activity grounded in Indigenous learning',
+				caption: 'Closing equity gaps remains the central foundation for the next cycle.'
+			},
+			{
+				id: 'section-ahead',
+				file: 'sustainability.jpg',
+				alt: 'Students collaborating outdoors',
+				caption: 'The next cycle focuses on sustainable systems that hold over time.'
+			}
+		].forEach(function (entry)
+		{
+			appendSectionImage(entry.id, entry.file, entry.alt, entry.caption);
+		});
 		addNextButtons();
 
 		document.addEventListener('mysp:filters-applied', function ()
@@ -466,8 +503,18 @@
 		window.MYSP.goToSection = function (target)
 		{
 			var section = target && target.closest ? target.closest('section[id^="section-"]') : null;
-			if (!section && target && target.id) { section = document.getElementById(target.id); }
-			if (section) { setActiveSection(section, { updateHash: true, scroll: true }); }
+			if (section)
+			{
+				setActiveSection(section, { updateHash: true, scroll: true, historyMode: 'push' });
+				return;
+			}
+			if (target && target.scrollIntoView)
+			{
+				target.scrollIntoView({
+					behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+					block: 'start'
+				});
+			}
 		};
 		window.MYSP.expandSection = function (el)
 		{
@@ -480,11 +527,11 @@
 		function applyHashSection()
 		{
 			var section = sectionFromHash();
-			if (section) { setActiveSection(section, { updateHash: false, scroll: false }); }
+			if (section) { setActiveSection(section, { updateHash: false, scroll: true }); }
 		}
 		window.addEventListener('hashchange', applyHashSection);
-		setActiveSection(sectionFromHash() || visibleSections()[0] || sections[0], { updateHash: false, scroll: false });
-		applyHashSection();
+		window.addEventListener('popstate', applyHashSection);
+		setActiveSection(sectionFromHash() || visibleSections()[0], { updateHash: false, scroll: false });
 	})();
 
 		/* ══ Mobile orientation: sticky section bar + drawer (v43) ══ */

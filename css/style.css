@@ -1304,6 +1304,23 @@ section.single-section-active {
 .story-body li { max-width: none; }
 .story-body p { font-size: 1.02rem; line-height: 1.78; }
 
+/* Intro image moved into prose flow: right-aligned wrap on larger screens,
+   stacked on mobile. Keep at least ~35ch for wrapped text. */
+#section-intro .intro-sustainability-image {
+	float: right;
+	width: clamp(10.5rem, 30%, 14rem);
+	height: auto;
+	margin: 0.15rem 0 1rem 1.25rem;
+	border-radius: 12px;
+	border: 1px solid rgba(38, 78, 116, 0.14);
+	box-shadow: var(--shadow-light);
+}
+#section-intro .story-body::after {
+	content: "";
+	display: table;
+	clear: both;
+}
+
 /* Stacked panels read at a slightly wider measure than body copy. */
 .pattern-list,
 .watch-data-panel,
@@ -1508,6 +1525,7 @@ section.single-section-active {
 	}
 	.wide-hero { padding: 1.75rem 1.5rem 1.25rem; }
 	.ptb-label { flex-basis: 100%; }
+	#section-intro .intro-sustainability-image { width: min(12rem, 40%); }
 }
 @media (max-width: 768px) {
 	.story-section,
@@ -1517,6 +1535,13 @@ section.single-section-active {
 	}
 	.story-body p { font-size: 1rem; }
 	.side-panel { padding: 0.8rem; }
+	#section-intro .intro-sustainability-image {
+		float: none;
+		display: block;
+		width: 100%;
+		max-width: 20rem;
+		margin: 0.35rem auto 1rem;
+	}
 }
 
 @media print {

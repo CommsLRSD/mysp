@@ -1158,17 +1158,13 @@
 .section-body-collapsible { overflow: hidden; }
 .story-section.section-collapsed .section-body-collapsible { display: none; }
 
-/* Expand animation (only fires when re-shown) */
+/* Expand animation (triggered by JS class, not on load) */
 @keyframes sectionBodyIn {
 	from { opacity: 0; transform: translateY(-6px); }
 	to   { opacity: 1; transform: translateY(0); }
 }
-.section-body-collapsible {
+.section-body-collapsible.section-body-entering {
 	animation: sectionBodyIn 0.22s ease;
-}
-/* When re-collapsed there should be no animation */
-.story-section.section-collapsed .section-body-collapsible {
-	animation: none;
 }
 
 /* ── Constrain story prose width for readability ── */
@@ -1195,7 +1191,7 @@
 }
 /* Respect reduced-motion: drop the body-in animation */
 @media (prefers-reduced-motion: reduce) {
-	.section-body-collapsible { animation: none !important; }
+	.section-body-collapsible.section-body-entering { animation: none !important; }
 	.section-toggle-btn svg { transition: none !important; }
 }
 

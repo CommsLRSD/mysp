@@ -326,6 +326,22 @@
 		{
 			section.classList.toggle('section-collapsed', !expanded);
 			btn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+			btn.setAttribute('aria-label', (expanded ? 'Collapse' : 'Expand') + ' this section');
+			/* Trigger enter animation only when actually expanding */
+			var body = section.querySelector('.section-body-collapsible');
+			if (body)
+			{
+				if (expanded)
+				{
+					body.classList.remove('section-body-entering');
+					void body.offsetWidth; /* force reflow so animation replays */
+					body.classList.add('section-body-entering');
+				}
+				else
+				{
+					body.classList.remove('section-body-entering');
+				}
+			}
 			try { sessionStorage.setItem('sc-' + section.id, expanded ? '1' : '0'); } catch (e) {}
 		}
 
@@ -402,13 +418,10 @@
 		function expandForHash()
 		{
 			var hash = location.hash;
-			if (!hash) { return; }
-			try
-			{
-				var target = document.querySelector(hash);
-				if (target && window.MYSP.expandSection) { window.MYSP.expandSection(target); }
-			}
-			catch (e) {}
+			if (!hash || hash.length < 2) { return; }
+			/* Use getElementById to avoid CSS-selector special-character errors */
+			var target = document.getElementById(hash.slice(1));
+			if (target && window.MYSP.expandSection) { window.MYSP.expandSection(target); }
 		}
 		window.addEventListener('hashchange', expandForHash);
 		expandForHash();

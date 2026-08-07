@@ -1310,7 +1310,7 @@ section.single-section-active {
 .wide-hero-photo .hero-stamp {
 	color: #fff;
 	background: rgba(255, 255, 255, 0.14);
-	border-color: rgba(255, 255, 255, 0.34);
+	border: 1px solid rgba(255, 255, 255, 0.34);
 }
 
 /* ── (2) Imagery keeps its aspect ratio ── */

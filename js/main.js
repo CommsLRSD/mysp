@@ -106,6 +106,7 @@
 				}
 				else if (note) note.hidden = true;
 			});
+			document.dispatchEvent(new CustomEvent('mysp:filters-applied'));
 		}
 
 		var priorityNav = document.getElementById('priority-nav');
@@ -155,6 +156,11 @@
 				var target = document.querySelector(link.getAttribute('href'));
 				if (!target) return;
 				e.preventDefault();
+				if (window.MYSP && typeof window.MYSP.goToSection === 'function')
+				{
+					window.MYSP.goToSection(target);
+					return;
+				}
 				target.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
 			});
 		});
@@ -207,7 +213,14 @@
 			onpageSelect.addEventListener('change', function()
 			{
 				var t = document.querySelector(onpageSelect.value);
-				if (t) t.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+				if (t && window.MYSP && typeof window.MYSP.goToSection === 'function')
+				{
+					window.MYSP.goToSection(t);
+				}
+				else if (t)
+				{
+					t.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+				}
 				onpageSelect.selectedIndex = 0;
 			});
 		}
@@ -224,6 +237,7 @@
 		function revealActionCard(card)
 		{
 			if (!card) return;
+			if (window.MYSP && typeof window.MYSP.expandSection === 'function') { window.MYSP.expandSection(card); }
 			if (card.classList.contains('js-filtered-out') || card.closest('.priority-hidden'))
 			{
 				var cf = document.getElementById('clear-filters');
@@ -286,145 +300,238 @@
 	})();
 
 /* ══════════════════════════════════════════════════════════════════
-	   Section accordion for narrative (story) sections.
-	   All sections collapse except the intro, so the page loads as
-	   a clean overview. Click the heading row or the chevron button
-	   to expand.  State is persisted in sessionStorage so it survives
-	   in-page navigation but resets on a fresh load.
+	   Single-section flow for top-level content sections.
+	   One section is visible at a time, with jump links and per-section
+	   next buttons for linear reading.
 	   ══════════════════════════════════════════════════════════════════ */
 	(function ()
 	{
-		var COLLAPSED_BY_DEFAULT = {
-			'section-change'      : true,
-			'section-learning'    : true,
-			'section-ahead'       : true,
-			'section-foundations' : true,
-			'section-glossary'    : true,
-			'section-reply'       : true
-		};
+		var sections = Array.prototype.slice.call(document.querySelectorAll('section[id^="section-"]'));
+		if (!sections.length) { return; }
+		var NEXT_LABEL_PREFIX = 'Next: ';
 
-		function makeChevron()
+		var activeSection = null;
+		var imageBasePath = '/mysp';
+		var cssLink = document.querySelector('link[href*="/css/style.css"]');
+		if (cssLink && cssLink.getAttribute('href'))
 		{
-			var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-			svg.setAttribute('width', '12');
-			svg.setAttribute('height', '12');
-			svg.setAttribute('viewBox', '0 0 12 12');
-			svg.setAttribute('aria-hidden', 'true');
-			svg.setAttribute('focusable', 'false');
-			var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-			path.setAttribute('d', 'M2 4l4 4 4-4');
-			path.setAttribute('fill', 'none');
-			path.setAttribute('stroke', 'currentColor');
-			path.setAttribute('stroke-width', '2');
-			path.setAttribute('stroke-linecap', 'round');
-			path.setAttribute('stroke-linejoin', 'round');
-			svg.appendChild(path);
-			return svg;
+			var href = cssLink.getAttribute('href');
+			var base = href.replace(/\/css\/style\.css(?:\?.*)?$/, '');
+			if (base) { imageBasePath = base; }
 		}
 
-		function setExpanded(section, btn, expanded)
+		function isSectionVisible(section)
 		{
-			section.classList.toggle('section-collapsed', !expanded);
-			btn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
-			btn.setAttribute('aria-label', (expanded ? 'Collapse' : 'Expand') + ' this section');
-			/* Trigger enter animation only when actually expanding */
-			var body = section.querySelector('.section-body-collapsible');
-			if (body)
+			return !!section && !section.classList.contains('priority-hidden');
+		}
+
+		function visibleSections()
+		{
+			return sections.filter(isSectionVisible);
+		}
+
+		function sectionTitle(section)
+		{
+			if (!section) { return 'this section'; }
+			var heading = section.querySelector('h2');
+			return heading ? heading.textContent.trim() : 'this section';
+		}
+
+		function updateJumpState()
+		{
+			document.querySelectorAll('.onpage-link').forEach(function (link)
 			{
-				if (expanded)
+				var match = activeSection && link.getAttribute('href') === ('#' + activeSection.id);
+				link.classList.toggle('active', !!match);
+			});
+		}
+
+		function updateNextButtons()
+		{
+			var visible = visibleSections();
+			visible.forEach(function (section, i)
+			{
+				var btn = section.querySelector('.section-next-btn');
+				if (!btn) { return; }
+				if (i < visible.length - 1)
 				{
-					body.classList.remove('section-body-entering');
-					void body.offsetWidth; /* force reflow so animation replays */
-					body.classList.add('section-body-entering');
+					btn.hidden = false;
+					btn.disabled = false;
+					btn.textContent = NEXT_LABEL_PREFIX + sectionTitle(visible[i + 1]);
 				}
 				else
 				{
-					body.classList.remove('section-body-entering');
+					btn.hidden = true;
+				}
+			});
+		}
+
+		function setActiveSection(section, options)
+		{
+			options = options || {};
+			var target = section;
+			if (typeof target === 'string') { target = document.getElementById(target); }
+			if (!target || !sections.length) { return; }
+			if (!isSectionVisible(target))
+			{
+				var fallback = visibleSections()[0];
+				if (!fallback) { return; }
+				target = fallback;
+			}
+			sections.forEach(function (item)
+			{
+				var active = item === target && isSectionVisible(item);
+				item.classList.toggle('single-section-hidden', !active);
+				item.classList.toggle('single-section-active', active);
+				item.inert = !active;
+				if (active) item.removeAttribute('aria-hidden');
+				else item.setAttribute('aria-hidden', 'true');
+			});
+			activeSection = target;
+			updateJumpState();
+			updateNextButtons();
+			if (options.updateHash !== false)
+			{
+				if (location.hash !== ('#' + target.id))
+				{
+					if (options.historyMode === 'push') history.pushState(null, '', '#' + target.id);
+					else history.replaceState(null, '', '#' + target.id);
 				}
 			}
-			try { sessionStorage.setItem('sc-' + section.id, expanded ? '1' : '0'); } catch (e) {}
+			if (options.scroll !== false)
+			{
+				target.scrollIntoView({
+					behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+					block: 'start'
+				});
+			}
 		}
 
-		document.querySelectorAll('.story-section').forEach(function (section)
+		function appendSectionImage(sectionId, imageName, altText, captionText)
 		{
-			if (!section.id) { return; }
-
-			/* Find eyebrow and heading as direct children */
-			var eyebrow = null, heading = null;
-			Array.prototype.forEach.call(section.children, function (child)
+			var section = document.getElementById(sectionId);
+			if (!section || section.querySelector('.story-break-image')) { return; }
+			var anchor = section.querySelector('.story-body');
+			if (!anchor) { return; }
+			var figure = document.createElement('figure');
+			figure.className = 'story-break-image';
+			var img = document.createElement('img');
+			img.src = imageBasePath + '/public/images/' + imageName;
+			img.alt = altText;
+			img.loading = 'lazy';
+			img.decoding = 'async';
+			img.addEventListener('error', function () { figure.style.display = 'none'; });
+			figure.appendChild(img);
+			if (captionText)
 			{
-				if (!eyebrow && child.classList.contains('story-eyebrow')) { eyebrow = child; }
-				if (!heading && child.tagName === 'H2' && child.classList.contains('story-title')) { heading = child; }
-			});
-			if (!heading) { return; }
+				var caption = document.createElement('figcaption');
+				caption.textContent = captionText;
+				figure.appendChild(caption);
+			}
+			anchor.insertAdjacentElement('afterend', figure);
+		}
 
-			/* ── Build header row ── */
-			var hd     = document.createElement('div');
-			hd.className = 'story-section-hd';
-
-			var hdText = document.createElement('div');
-			hdText.className = 'story-section-hd-text';
-			if (eyebrow) { hdText.appendChild(eyebrow); }   /* moves node */
-			hdText.appendChild(heading);                     /* moves node */
-			hd.appendChild(hdText);
-
-			var btn    = document.createElement('button');
-			btn.className = 'section-toggle-btn';
-			btn.setAttribute('type', 'button');
-			btn.setAttribute('aria-label', 'Expand or collapse this section');
-			btn.setAttribute('aria-controls', 'sbody-' + section.id);
-			btn.appendChild(makeChevron());
-			hd.appendChild(btn);
-
-			section.insertBefore(hd, section.firstChild);
-
-			/* ── Wrap remaining children in collapsible body ── */
-			var bodyWrap = document.createElement('div');
-			bodyWrap.className = 'section-body-collapsible';
-			bodyWrap.id = 'sbody-' + section.id;
-			/* Snapshot the list before we start moving nodes */
-			var remaining = Array.prototype.slice.call(section.children);
-			remaining.forEach(function (child) {
-				if (child !== hd) { bodyWrap.appendChild(child); }
-			});
-			section.appendChild(bodyWrap);
-
-			/* ── Determine initial state ── */
-			var saved = null;
-			try { saved = sessionStorage.getItem('sc-' + section.id); } catch (e) {}
-			var collapsed = (saved !== null) ? (saved === '0') : !!COLLAPSED_BY_DEFAULT[section.id];
-			setExpanded(section, btn, !collapsed);
-
-			/* ── Interaction ── */
-			hd.addEventListener('click', function (e)
-			{
-				/* Don't intercept clicks on links inside the heading row */
-				if (e.target.tagName === 'A' || (e.target.closest && e.target.closest('a'))) { return; }
-				setExpanded(section, btn, section.classList.contains('section-collapsed'));
-			});
-		});
-
-		/* ── Utility: expand the story-section containing an element ── */
-		window.MYSP = window.MYSP || {};
-		window.MYSP.expandSection = function (el)
+		function addNextButtons()
 		{
-			var section = el && el.closest && el.closest('.story-section');
-			if (!section || !section.classList.contains('section-collapsed')) { return; }
-			var btn = section.querySelector('.section-toggle-btn');
-			if (btn) { setExpanded(section, btn, true); }
-		};
+			sections.forEach(function (section, i)
+			{
+				if (section.querySelector('.section-next-nav')) { return; }
+				var nav = document.createElement('div');
+				nav.className = 'section-next-nav';
+				var btn = document.createElement('button');
+				btn.type = 'button';
+				btn.className = 'section-next-btn';
+				btn.addEventListener('click', function ()
+				{
+					var visible = visibleSections();
+					var idx = visible.indexOf(section);
+					if (idx === -1 || idx >= visible.length - 1) { return; }
+					setActiveSection(visible[idx + 1], { updateHash: true, scroll: true, historyMode: 'push' });
+				});
+				nav.appendChild(btn);
+				var toTop = section.querySelector('.totop');
+				if (toTop && toTop.parentNode === section) section.insertBefore(nav, toTop);
+				else section.appendChild(nav);
+			});
+		}
 
-		/* ── Auto-expand when a URL hash targets content inside a collapsed section ── */
-		function expandForHash()
+		function sectionFromHash()
 		{
 			var hash = location.hash;
-			if (!hash || hash.length < 2) { return; }
-			/* Use getElementById to avoid CSS-selector special-character errors */
-			var target = document.getElementById(hash.slice(1));
-			if (target && window.MYSP.expandSection) { window.MYSP.expandSection(target); }
+			if (!hash || hash.length < 2) { return null; }
+			var node = document.getElementById(hash.slice(1));
+			if (!node) { return null; }
+			return node.closest ? node.closest('section[id^="section-"]') : null;
 		}
-		window.addEventListener('hashchange', expandForHash);
-		expandForHash();
+
+		[
+			{
+				id: 'section-change',
+				file: 'nutrition.jpg',
+				alt: 'Students sharing a meal in school',
+				caption: 'Nutrition programs are one of the most visible changes on the dashboard.'
+			},
+			{
+				id: 'section-foundations',
+				file: 'indigenous-ed.jpg',
+				alt: 'Classroom activity grounded in Indigenous learning',
+				caption: 'Closing equity gaps remains the central foundation for the next cycle.'
+			},
+			{
+				id: 'section-ahead',
+				file: 'sustainability.jpg',
+				alt: 'Students collaborating outdoors',
+				caption: 'The next cycle focuses on sustainable systems that hold over time.'
+			}
+		].forEach(function (entry)
+		{
+			appendSectionImage(entry.id, entry.file, entry.alt, entry.caption);
+		});
+		addNextButtons();
+
+		document.addEventListener('mysp:filters-applied', function ()
+		{
+			updateNextButtons();
+			if (!activeSection || !isSectionVisible(activeSection))
+			{
+				var fallback = visibleSections()[0];
+				if (fallback) setActiveSection(fallback, { updateHash: false, scroll: false });
+			}
+		});
+
+		window.MYSP = window.MYSP || {};
+		window.MYSP.goToSection = function (target)
+		{
+			var section = target && target.closest ? target.closest('section[id^="section-"]') : null;
+			if (section)
+			{
+				setActiveSection(section, { updateHash: true, scroll: true, historyMode: 'push' });
+				return;
+			}
+			if (target && target.scrollIntoView)
+			{
+				target.scrollIntoView({
+					behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+					block: 'start'
+				});
+			}
+		};
+		window.MYSP.expandSection = function (el)
+		{
+			if (!el || !el.closest) { return; }
+			var section = el.closest('section[id^="section-"]');
+			if (!section) { return; }
+			setActiveSection(section, { updateHash: false, scroll: false });
+		};
+
+		function applyHashSection()
+		{
+			var section = sectionFromHash();
+			if (section) { setActiveSection(section, { updateHash: false, scroll: true }); }
+		}
+		window.addEventListener('hashchange', applyHashSection);
+		window.addEventListener('popstate', applyHashSection);
+		setActiveSection(sectionFromHash() || visibleSections()[0], { updateHash: false, scroll: false });
 	})();
 
 		/* ══ Mobile orientation: sticky section bar + drawer (v43) ══ */

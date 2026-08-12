@@ -1044,7 +1044,7 @@
 
 
 	/* ══ v19 desktop layout: unified centred column ══ */
-	:root { --content-max: 1200px; }
+	:root { --content-max: 1200px; --mobile-section-bar-h: 52px; }
 
 	/* ══════════════════════════════════════════════════════════
 	   Mobile orientation: sticky section bar + drawer navigation
@@ -1055,7 +1055,7 @@
 	#section-bar {
 		position: fixed; top: 0; left: 0; right: 0; z-index: 980;
 		display: none; align-items: center; gap: 0.6rem;
-		height: 52px; padding: 0 0.6rem;
+		height: var(--mobile-section-bar-h); padding: 0 0.6rem;
 		/* 90% opacity keeps white text at 6.59:1 even over a white
 		   background. Do not lower it: at ~70% the label becomes
 		   unreadable wherever pale content scrolls underneath. */
@@ -1101,15 +1101,15 @@
 	@media (max-width: 768px) {
 		#section-bar { display: flex; }
 		#nav-close { display: inline-flex; }
-		#nav-scrim { top: 52px; }
+		#nav-scrim { top: var(--mobile-section-bar-h); }
 
 		/* The drawer is the SAME element as the desktop sidebar, moved by
 		   CSS only. No DOM is reparented, so every existing filter, chip
 		   and search selector keeps working untouched. */
 		#side-nav {
-			position: fixed; top: 52px; left: 0; z-index: 950;
+			position: fixed; top: var(--mobile-section-bar-h); left: 0; z-index: 950;
 			width: min(86vw, 340px); max-width: 340px;
-			height: calc(100vh - 52px); height: calc(100dvh - 52px);
+			height: calc(100vh - var(--mobile-section-bar-h)); height: calc(100dvh - var(--mobile-section-bar-h));
 			background: var(--white);
 			border-right: none; box-shadow: 4px 0 28px rgba(0, 0, 0, 0.22);
 			overflow-y: auto; -webkit-overflow-scrolling: touch;
@@ -1119,7 +1119,7 @@
 		}
 		#side-nav.open { transform: translateX(0); visibility: visible; }
 		body.nav-open { overflow: hidden; }
-		#wide-content { padding-top: 52px; }
+		#wide-content { padding-top: var(--mobile-section-bar-h); }
 		/* Clears the fixed bar so anchor jumps do not land under it. */
 		html { scroll-padding-top: 60px; }
 		:target { scroll-margin-top: 60px; }
@@ -1770,10 +1770,10 @@ section.single-section-active {
 	.story-body p { font-size: 1rem; }
 	.side-panel { padding: 0.8rem; }
 	#priorities-filter-bar {
-		top: calc(52px + 1rem);
+		top: calc(var(--mobile-section-bar-h) + 1rem);
 		transform: translate(calc(100% - 3.35rem), 0);
-		max-height: calc(100vh - 72px);
-		max-height: calc(100dvh - 72px);
+		max-height: calc(100vh - (var(--mobile-section-bar-h) + 1rem));
+		max-height: calc(100dvh - (var(--mobile-section-bar-h) + 1rem));
 	}
 	#priorities-filter-bar.ptb-open { transform: translate(0, 0); }
 	#priorities-filter-bar .priority-toolbar { margin: 0; }

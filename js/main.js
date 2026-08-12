@@ -1191,6 +1191,8 @@
 	var searchInput = document.getElementById('action-search');
 	var clearBtn = document.getElementById('clear-filters');
 	if (!priorityNav || !filterBar || !sections.length) { return; }
+	if (filterBar.getAttribute('data-ptb-initialized') === 'true') { return; }
+	filterBar.setAttribute('data-ptb-initialized', 'true');
 
 	var sourcePriorities = Array.prototype.slice.call(
 		priorityNav.querySelectorAll('.pnav-item-all, .pnav-item'));
@@ -1335,10 +1337,11 @@
 		if (!narrowMq.matches) { return; }
 		setPanelOpen(!filterBar.classList.contains('ptb-open'));
 	});
-	document.addEventListener('keydown', function (e)
+	function onPanelKeydown(e)
 	{
 		if (e.key === 'Escape' && filterBar.classList.contains('ptb-open')) { setPanelOpen(false); }
-	});
+	}
+	document.addEventListener('keydown', onPanelKeydown);
 	narrowMq.addEventListener ? narrowMq.addEventListener('change', syncPanel) : narrowMq.addListener(syncPanel);
 	syncPanel();
 

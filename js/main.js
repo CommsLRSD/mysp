@@ -1463,15 +1463,15 @@
 	render();
 })();
 
-	(function ()
+(function ()
+{
+	if (!('serviceWorker' in navigator)) return;
+	window.addEventListener('load', function ()
 	{
-		if (!('serviceWorker' in navigator)) return;
-		window.addEventListener('load', function ()
-		{
-			navigator.serviceWorker.register('/mysp/sw.js', { scope: '/mysp/' })
-				.catch(function (error)
-				{
-					if (window.console) console.warn('[MYSP] Service worker registration failed:', error);
-				});
-		});
-	})();
+		navigator.serviceWorker.register('/mysp/sw.js', { scope: '/mysp/' })
+			.catch(function (error)
+			{
+				if (window.console) console.warn('[MYSP] Service worker registration failed:', error);
+			});
+	});
+})();

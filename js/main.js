@@ -109,6 +109,13 @@
 			document.dispatchEvent(new CustomEvent('mysp:filters-applied'));
 		}
 
+		function syncPriorityChips(priority)
+		{
+			document.querySelectorAll('.filter-chip[data-filter-type="priority"]').forEach(function(c) { c.classList.remove('active'); });
+			var chip = document.querySelector('.filter-chip[data-filter-type="priority"][data-priority="' + priority + '"]');
+			if (chip) chip.classList.add('active');
+		}
+
 		var priorityNav = document.getElementById('priority-nav');
 		if (priorityNav)
 		{
@@ -119,15 +126,23 @@
 				activePriority = item.getAttribute('data-section');
 				priorityNav.querySelectorAll('.pnav-item, .pnav-item-all').forEach(function(i) { i.classList.remove('active'); });
 				item.classList.add('active');
+				syncPriorityChips(activePriority);
 				applyFilters();
 				updateClearVisibility();
-				var target = document.getElementById(activePriority === 'all' ? 'section-belonging' : 'section-' + activePriority);
-				if (target && activePriority !== 'all')
+				if (activePriority === 'all')
 				{
-					if (window.MYSP && typeof window.MYSP.goToSection === 'function') window.MYSP.goToSection(target);
-					else target.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+					if (window.MYSP && typeof window.MYSP.showAllPriorities === 'function') window.MYSP.showAllPriorities();
+					else window.scrollTo({ top: 0, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
 				}
-				if (activePriority === 'all') window.scrollTo({ top: 0, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+				else
+				{
+					var target = document.getElementById('section-' + activePriority);
+					if (target)
+					{
+						if (window.MYSP && typeof window.MYSP.goToSection === 'function') window.MYSP.goToSection(target);
+						else target.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+					}
+				}
 			});
 		}
 
@@ -191,6 +206,8 @@
 					document.querySelectorAll('.pnav-item, .pnav-item-all').forEach(function(i) { i.classList.remove('active'); });
 					var allBtn = document.querySelector('.pnav-item-all');
 					if (allBtn) allBtn.classList.add('active');
+					syncPriorityChips('all');
+					if (window.MYSP && typeof window.MYSP.showAllPriorities === 'function') window.MYSP.showAllPriorities({ scroll: false });
 				}
 				applyFilters();
 				updateClearVisibility();
@@ -202,12 +219,47 @@
 			searchInput.value = '';
 			document.querySelectorAll('.filter-chip').forEach(function(c) { c.classList.remove('active'); });
 			document.querySelectorAll('.filter-chip[data-stage="all"], .filter-chip[data-datahub-filter="all"]').forEach(function(c) { c.classList.add('active'); });
+			syncPriorityChips('all');
 			document.querySelectorAll('.pnav-item, .pnav-item-all').forEach(function(i) { i.classList.remove('active'); });
 			var allBtn = document.querySelector('.pnav-item-all');
 			if (allBtn) allBtn.classList.add('active');
 			applyFilters();
+			if (window.MYSP && typeof window.MYSP.showAllPriorities === 'function') window.MYSP.showAllPriorities();
 			updateClearVisibility();
 			searchInput.focus();
+		});
+
+		// Priority filter chips in the "Review and Filter" sidebar section
+		document.querySelectorAll('.filter-chip[data-filter-type="priority"]').forEach(function(chip)
+		{
+			chip.addEventListener('click', function()
+			{
+				activePriority = chip.getAttribute('data-priority');
+				syncPriorityChips(activePriority);
+				var pnav = document.getElementById('priority-nav');
+				if (pnav)
+				{
+					pnav.querySelectorAll('.pnav-item, .pnav-item-all').forEach(function(i) { i.classList.remove('active'); });
+					var matchingNavItem = pnav.querySelector('[data-section="' + activePriority + '"]');
+					if (matchingNavItem) matchingNavItem.classList.add('active');
+				}
+				applyFilters();
+				updateClearVisibility();
+				if (activePriority === 'all')
+				{
+					if (window.MYSP && typeof window.MYSP.showAllPriorities === 'function') window.MYSP.showAllPriorities();
+					else window.scrollTo({ top: 0, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+				}
+				else
+				{
+					var target = document.getElementById('section-' + activePriority);
+					if (target)
+					{
+						if (window.MYSP && typeof window.MYSP.goToSection === 'function') window.MYSP.goToSection(target);
+						else target.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+					}
+				}
+			});
 		});
 
 
@@ -535,6 +587,29 @@
 			var section = el.closest('section[id^="section-"]');
 			if (!section) { return; }
 			setActiveSection(section, { updateHash: false, scroll: false });
+		};
+		/* Show all four priority sections simultaneously (used by "All Priorities" nav). */
+		window.MYSP.showAllPriorities = function (options)
+		{
+			options = options || {};
+			var priorityIds = ['section-belonging', 'section-mastery', 'section-independence', 'section-generosity'];
+			sections.forEach(function (item)
+			{
+				var isPriority = priorityIds.indexOf(item.id) !== -1;
+				var visible = isPriority && isSectionVisible(item);
+				item.classList.toggle('single-section-hidden', !visible);
+				item.classList.toggle('single-section-active', visible);
+				item.inert = !visible;
+				if (visible) item.removeAttribute('aria-hidden');
+				else item.setAttribute('aria-hidden', 'true');
+			});
+			activeSection = document.getElementById('section-belonging') || visibleSections()[0];
+			updateJumpState();
+			updateNextButtons();
+			if (options.scroll !== false)
+			{
+				window.scrollTo({ top: 0, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+			}
 		};
 
 		function applyHashSection()

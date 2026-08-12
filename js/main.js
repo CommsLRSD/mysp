@@ -167,11 +167,32 @@
 			});
 		});
 
+		function triggerAllPriorities()
+		{
+			var allBtn = document.querySelector('.pnav-item-all[data-section="all"]');
+			if (allBtn)
+			{
+				allBtn.click();
+				return true;
+			}
+			if (window.MYSP && typeof window.MYSP.showAllPriorities === 'function')
+			{
+				window.MYSP.showAllPriorities();
+				return true;
+			}
+			return false;
+		}
+
 		// Smooth scroll for on-page nav
 		document.querySelectorAll('.onpage-link').forEach(function(link)
 		{
 			link.addEventListener('click', function(e)
 			{
+				if (link.getAttribute('href') === '#section-belonging' && triggerAllPriorities())
+				{
+					e.preventDefault();
+					return;
+				}
 				var target = document.querySelector(link.getAttribute('href'));
 				if (!target) return;
 				e.preventDefault();
@@ -268,6 +289,11 @@
 		{
 			onpageSelect.addEventListener('change', function()
 			{
+				if (onpageSelect.value === '#section-belonging' && triggerAllPriorities())
+				{
+					onpageSelect.selectedIndex = 0;
+					return;
+				}
 				var t = document.querySelector(onpageSelect.value);
 				if (t && window.MYSP && typeof window.MYSP.goToSection === 'function')
 				{
@@ -365,6 +391,7 @@
 		var sections = Array.prototype.slice.call(document.querySelectorAll('section[id^="section-"]'));
 		if (!sections.length) { return; }
 		var NEXT_LABEL_PREFIX = 'Next: ';
+		var PRIORITY_SECTION_IDS = ['section-belonging', 'section-mastery', 'section-independence', 'section-generosity'];
 
 		var activeSection = null;
 		var imageBasePath = '/mysp';
@@ -386,6 +413,59 @@
 			return sections.filter(isSectionVisible);
 		}
 
+		function prioritySectionIndex(section)
+		{
+			if (!section || !section.id) { return -1; }
+			return PRIORITY_SECTION_IDS.indexOf(section.id);
+		}
+
+		function currentPrioritySelection()
+		{
+			var activeNavItem = document.querySelector('#priority-nav .pnav-item.active, #priority-nav .pnav-item-all.active');
+			if (activeNavItem) { return activeNavItem.getAttribute('data-section') || 'all'; }
+			var activeChip = document.querySelector('.filter-chip[data-filter-type="priority"].active');
+			if (activeChip) { return activeChip.getAttribute('data-priority') || 'all'; }
+			return 'all';
+		}
+
+		function nextSectionTarget(section)
+		{
+			var priorityIndex = prioritySectionIndex(section);
+			if (priorityIndex !== -1 && currentPrioritySelection() !== 'all')
+			{
+				if (priorityIndex < PRIORITY_SECTION_IDS.length - 1)
+				{
+					return document.getElementById(PRIORITY_SECTION_IDS[priorityIndex + 1]);
+				}
+				return document.getElementById('section-ahead');
+			}
+
+			var visible = visibleSections();
+			var visibleIndex = visible.indexOf(section);
+			if (visibleIndex === -1 || visibleIndex >= visible.length - 1) { return null; }
+			return visible[visibleIndex + 1];
+		}
+
+		function activatePrioritySection(section)
+		{
+			var priorityIndex = prioritySectionIndex(section);
+			if (priorityIndex === -1) { return false; }
+			var priority = section.id.replace('section-', '');
+			var navItem = document.querySelector('#priority-nav [data-section="' + priority + '"]');
+			if (navItem)
+			{
+				navItem.click();
+				return true;
+			}
+			var chip = document.querySelector('.filter-chip[data-filter-type="priority"][data-priority="' + priority + '"]');
+			if (chip)
+			{
+				chip.click();
+				return true;
+			}
+			return false;
+		}
+
 		function sectionTitle(section)
 		{
 			if (!section) { return 'this section'; }
@@ -404,16 +484,16 @@
 
 		function updateNextButtons()
 		{
-			var visible = visibleSections();
-			visible.forEach(function (section, i)
+			sections.forEach(function (section)
 			{
 				var btn = section.querySelector('.section-next-btn');
 				if (!btn) { return; }
-				if (i < visible.length - 1)
+				var next = nextSectionTarget(section);
+				if (next)
 				{
 					btn.hidden = false;
 					btn.disabled = false;
-					btn.textContent = NEXT_LABEL_PREFIX + sectionTitle(visible[i + 1]);
+					btn.textContent = NEXT_LABEL_PREFIX + sectionTitle(next);
 				}
 				else
 				{
@@ -499,10 +579,10 @@
 				btn.className = 'section-next-btn';
 				btn.addEventListener('click', function ()
 				{
-					var visible = visibleSections();
-					var idx = visible.indexOf(section);
-					if (idx === -1 || idx >= visible.length - 1) { return; }
-					setActiveSection(visible[idx + 1], { updateHash: true, scroll: true, historyMode: 'push' });
+					var target = nextSectionTarget(section);
+					if (!target) { return; }
+					if (prioritySectionIndex(target) !== -1 && currentPrioritySelection() !== 'all' && activatePrioritySection(target)) { return; }
+					setActiveSection(target, { updateHash: true, scroll: true, historyMode: 'push' });
 				});
 				nav.appendChild(btn);
 				var toTop = section.querySelector('.totop');

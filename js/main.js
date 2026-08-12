@@ -118,11 +118,21 @@
 			if (chip) chip.classList.add('active');
 		}
 
-		function showPrioritiesView(options)
+		function showPrioritiesView(priority)
 		{
+			var target = priority && priority !== 'all' ? document.getElementById('section-' + priority) : null;
 			if (window.MYSP && typeof window.MYSP.showAllPriorities === 'function')
 			{
-				window.MYSP.showAllPriorities(options || {});
+				window.MYSP.showAllPriorities({ scroll: !target });
+				if (target)
+				{
+					target.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+				}
+				return;
+			}
+			if (target)
+			{
+				target.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
 				return;
 			}
 			window.scrollTo({ top: 0, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
@@ -141,7 +151,7 @@
 				syncPriorityChips(activePriority);
 				applyFilters();
 				updateClearVisibility();
-				showPrioritiesView();
+				showPrioritiesView(activePriority);
 			});
 		}
 
@@ -265,7 +275,7 @@
 				}
 				applyFilters();
 				updateClearVisibility();
-				showPrioritiesView();
+				showPrioritiesView(activePriority);
 			});
 		});
 

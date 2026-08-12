@@ -1265,7 +1265,7 @@
 	head.className = 'ptb-head';
 	var titleEl = document.createElement('p');
 	titleEl.className = 'ptb-title';
-	titleEl.textContent = 'Filter';
+	titleEl.textContent = 'Review and Filter';
 	var count = document.createElement('p');
 	count.className = 'ptb-count';
 	head.appendChild(titleEl);
@@ -1347,6 +1347,25 @@
 	});
 	narrowMq.addEventListener ? narrowMq.addEventListener('change', syncPanel) : narrowMq.addListener(syncPanel);
 	syncPanel();
+
+	/* Hide the filter tab entirely when the user has scrolled past the
+	   priorities section into Looking Ahead / Words We Use / Tell Us What
+	   You Think – it has no function there. */
+	var prioritiesMain = document.getElementById('priorities-main');
+	if (prioritiesMain && window.IntersectionObserver) {
+		var sectionObserver = new IntersectionObserver(function (entries) {
+			entries.forEach(function (entry) {
+				if (!narrowMq.matches) { return; }
+				if (!entry.isIntersecting) {
+					filterBar.classList.add('ptb-out');
+					setPanelOpen(false);
+				} else {
+					filterBar.classList.remove('ptb-out');
+				}
+			});
+		}, { threshold: 0 });
+		sectionObserver.observe(prioritiesMain);
+	}
 
 	/* clearBtn.hidden is set AFTER applyFilters dispatches its event, so it
 	   would always be one pass stale here. Read the controls instead. */

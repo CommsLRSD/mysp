@@ -5390,7 +5390,7 @@
 	/* Then / Now change cards */
 	.change-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.1rem; margin-top: 1.2rem; }
 	.change-card { background: var(--white); border-radius: 12px; box-shadow: var(--shadow-light); padding: 1.1rem 1.2rem 1rem; }
-	.change-topic { font-family: var(--header-font); font-size: 0.82rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--primary); margin: 0 0 0.6rem; }
+	.change-topic { font-family: var(--header-font); font-size: 1rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--primary); margin: 0 0 0.6rem; }
 	.change-pair { display: flex; gap: 0.8rem; align-items: stretch; }
 	.change-then, .change-now { flex: 1; border-radius: 8px; padding: 0.55rem 0.7rem; }
 	.change-then { background: #f1f3f6; border: 1px dashed #c8cfd9; }
@@ -5402,6 +5402,23 @@
 	.change-trace { margin: 0.7rem 0 0; }
 	.change-link { display: inline-block; font-family: var(--header-font); font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--primary); text-decoration: none; border-bottom: 1px solid rgba(38,78,116,0.28); padding-bottom: 1px; }
 	.change-link:hover, .change-link:focus-visible { border-bottom-color: var(--primary); background: rgba(38,78,116,0.06); }
+	/* Action popup dialog */
+	#action-popup-overlay { display: none; position: fixed; inset: 0; background: rgba(10,20,40,0.55); z-index: 800; align-items: center; justify-content: center; padding: 1rem; }
+	#action-popup-overlay.open { display: flex; }
+	#action-popup { background: var(--white); border-radius: 14px; box-shadow: 0 8px 40px rgba(10,20,40,0.28); max-width: 820px; width: 100%; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; }
+	#action-popup-header { display: flex; align-items: center; justify-content: space-between; padding: 0.85rem 1.2rem 0.75rem; border-bottom: 1px solid #e2e6ec; flex-shrink: 0; }
+	#action-popup-title { font-family: var(--header-font); font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--primary); margin: 0; }
+	#action-popup-close-x { background: none; border: none; cursor: pointer; color: #556; padding: 0.25rem; line-height: 1; font-size: 1.3rem; border-radius: 4px; }
+	#action-popup-close-x:hover { color: var(--primary); background: rgba(38,78,116,0.07); }
+	#action-popup-body { overflow-y: auto; padding: 1.2rem 1.2rem 0.5rem; flex: 1; }
+	#action-popup-body .scorecard { box-shadow: none; border: none; padding: 0; background: transparent; }
+	#action-popup-body .scorecard:hover { transform: none; }
+	#action-popup-footer { display: flex; gap: 0.7rem; justify-content: flex-end; padding: 0.75rem 1.2rem 1rem; border-top: 1px solid #e2e6ec; flex-shrink: 0; flex-wrap: wrap; }
+	#action-popup-close-btn { font-family: var(--header-font); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 0.55rem 1.1rem; border-radius: 6px; border: 1.5px solid var(--primary); background: transparent; color: var(--primary); cursor: pointer; }
+	#action-popup-close-btn:hover { background: rgba(38,78,116,0.07); }
+	#action-popup-goto-btn { font-family: var(--header-font); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 0.55rem 1.1rem; border-radius: 6px; border: none; background: var(--primary); color: #fff; cursor: pointer; }
+	#action-popup-goto-btn:hover { background: #1a3a5c; }
+	@media (max-width: 500px) { #action-popup-footer { flex-direction: column; } #action-popup-close-btn, #action-popup-goto-btn { width: 100%; text-align: center; } }
 	/* Learning patterns */
 	.pattern-list { display: flex; flex-direction: column; gap: 0.8rem; margin-top: 1.1rem; }
 	.pattern { background: var(--white); border-radius: 12px; box-shadow: var(--shadow-light); padding: 1rem 1.2rem; border-left: 4px solid var(--primary); }
@@ -6523,20 +6540,136 @@
 		window.addEventListener('hashchange', openHashCard);
 		openHashCard();
 
-		// Signs of Change links. Handled on click rather than left to the hash,
-		// because fragment navigation is blocked in sandboxed preview iframes,
-		// so hashchange never fires and the link appears dead. Same pattern the
-		// on-page nav already uses. The href stays as a no-JS fallback.
-		document.querySelectorAll('a.change-link').forEach(function(link)
+		// Signs of Change links — open action popup dialog instead of navigating directly.
+		// The href stays as a no-JS fallback.
+		(function()
 		{
-			link.addEventListener('click', function(e)
+			var overlay   = document.getElementById('action-popup-overlay');
+			var popupBody = document.getElementById('action-popup-body');
+			var closeX    = document.getElementById('action-popup-close-x');
+			var closeBtn  = document.getElementById('action-popup-close-btn');
+			var gotoBtn   = document.getElementById('action-popup-goto-btn');
+			if (!overlay || !popupBody || !closeX || !closeBtn || !gotoBtn) return;
+
+			var currentTarget = null;
+			var triggerEl = null;
+
+			function wireDetailTabs(details)
 			{
-				var card = document.querySelector(link.getAttribute('href'));
-				if (!card) return;
-				e.preventDefault();
-				revealActionCard(card);
+				details.addEventListener('toggle', function()
+				{
+					if (details.open)
+					{
+						var inner = details.querySelector('.details-inner');
+						if (inner && !inner.querySelector('.detail-tab-pane.active'))
+						{
+							var panes = inner.querySelectorAll('.detail-tab-pane');
+							var btns  = inner.querySelectorAll('.detail-tab-btn');
+							if (panes[0]) panes[0].classList.add('active');
+							if (btns[0])  btns[0].classList.add('active');
+						}
+					}
+				});
+				details.addEventListener('click', function(e)
+				{
+					var btn = e.target.closest('.detail-tab-btn');
+					if (!btn) return;
+					var tabKey = btn.getAttribute('data-tab');
+					var inner  = details.querySelector('.details-inner');
+					if (!inner) return;
+					inner.querySelectorAll('.detail-tab-btn').forEach(function(b) { b.classList.remove('active'); b.setAttribute('aria-selected', 'false'); });
+					inner.querySelectorAll('.detail-tab-pane').forEach(function(p) { p.classList.remove('active'); });
+					btn.classList.add('active');
+					btn.setAttribute('aria-selected', 'true');
+					var pane = inner.querySelector('[data-pane="' + tabKey + '"]');
+					if (pane) pane.classList.add('active');
+				});
+			}
+
+			function openPopup(targetHref, label, trigger)
+			{
+				var card = document.querySelector(targetHref);
+				if (!card) return false;
+				currentTarget = targetHref;
+				triggerEl = trigger || null;
+
+				// Clone the card content into the popup body
+				popupBody.innerHTML = '';
+				var clone = card.cloneNode(true);
+				// Strip all id attributes from the clone to prevent duplicate ids in the DOM
+				clone.removeAttribute('id');
+				clone.querySelectorAll('[id]').forEach(function(el) { el.removeAttribute('id'); });
+				// Open the details element in the clone
+				var clonedDetails = clone.querySelector('.card-details');
+				if (clonedDetails)
+				{
+					clonedDetails.open = true;
+					wireDetailTabs(clonedDetails);
+					// Activate first tab in clone
+					var inner = clonedDetails.querySelector('.details-inner');
+					if (inner)
+					{
+						var firstPane = inner.querySelector('.detail-tab-pane');
+						var firstBtn  = inner.querySelector('.detail-tab-btn');
+						if (firstPane && !firstPane.classList.contains('active')) firstPane.classList.add('active');
+						if (firstBtn  && !firstBtn.classList.contains('active'))  { firstBtn.classList.add('active'); firstBtn.setAttribute('aria-selected', 'true'); }
+					}
+				}
+				popupBody.appendChild(clone);
+
+				// Update popup title with action label
+				var titleEl = document.getElementById('action-popup-title');
+				if (titleEl) titleEl.textContent = label || 'Strategic Action';
+
+				overlay.classList.add('open');
+				overlay.removeAttribute('aria-hidden');
+				document.body.style.overflow = 'hidden';
+				closeX.focus();
+				return true;
+			}
+
+			function closePopup()
+			{
+				overlay.classList.remove('open');
+				overlay.setAttribute('aria-hidden', 'true');
+				document.body.style.overflow = '';
+				currentTarget = null;
+				if (triggerEl) { triggerEl.focus(); triggerEl = null; }
+			}
+
+			closeX.addEventListener('click', closePopup);
+			closeBtn.addEventListener('click', closePopup);
+
+			gotoBtn.addEventListener('click', function()
+			{
+				if (!currentTarget) { closePopup(); return; }
+				var card = document.querySelector(currentTarget);
+				closePopup();
+				if (card) revealActionCard(card);
 			});
-		});
+
+			// Close on overlay background click
+			overlay.addEventListener('click', function(e)
+			{
+				if (e.target === overlay) closePopup();
+			});
+
+			// Close on Escape key
+			document.addEventListener('keydown', function(e)
+			{
+				if ((e.key === 'Escape' || e.key === 'Esc') && overlay.classList.contains('open')) closePopup();
+			});
+
+			document.querySelectorAll('a.change-link').forEach(function(link)
+			{
+				link.addEventListener('click', function(e)
+				{
+					var targetHref = link.getAttribute('href');
+					var label = link.getAttribute('aria-label') || link.textContent.trim();
+					if (openPopup(targetHref, label, link)) e.preventDefault();
+				});
+			});
+		}());
 
 		// Back to top
 		var topBtn = document.createElement('button');
@@ -6858,5 +6991,18 @@
 	})();
 	</script>
 <!-- ══════════ CMS CONTENT ENDS HERE ══════════ -->
+<div id="action-popup-overlay">
+	<div id="action-popup" role="dialog" aria-modal="true" aria-labelledby="action-popup-title">
+		<div id="action-popup-header">
+			<p id="action-popup-title">Strategic Action</p>
+			<button id="action-popup-close-x" aria-label="Close">&times;</button>
+		</div>
+		<div id="action-popup-body"></div>
+		<div id="action-popup-footer">
+			<button id="action-popup-close-btn" type="button">Close</button>
+			<button id="action-popup-goto-btn" type="button">Go to this strategic action</button>
+		</div>
+	</div>
+</div>
 </body>
 </html>

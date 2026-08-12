@@ -339,20 +339,130 @@
 		window.addEventListener('hashchange', openHashCard);
 		openHashCard();
 
-		// Signs of Change links. Handled on click rather than left to the hash,
-		// because fragment navigation is blocked in sandboxed preview iframes,
-		// so hashchange never fires and the link appears dead. Same pattern the
-		// on-page nav already uses. The href stays as a no-JS fallback.
-		document.querySelectorAll('a.change-link').forEach(function(link)
+		// Signs of Change links — open action popup dialog instead of navigating directly.
+		// The href stays as a no-JS fallback.
+		(function()
 		{
-			link.addEventListener('click', function(e)
+			var overlay   = document.getElementById('action-popup-overlay');
+			var popupBody = document.getElementById('action-popup-body');
+			var closeX    = document.getElementById('action-popup-close-x');
+			var closeBtn  = document.getElementById('action-popup-close-btn');
+			var gotoBtn   = document.getElementById('action-popup-goto-btn');
+			if (!overlay || !popupBody || !closeX || !closeBtn || !gotoBtn) return;
+
+			var currentTarget = null;
+			var triggerEl = null;
+
+			function wireDetailTabs(details)
 			{
-				var card = document.querySelector(link.getAttribute('href'));
-				if (!card) return;
-				e.preventDefault();
-				revealActionCard(card);
+				details.addEventListener('toggle', function()
+				{
+					if (details.open)
+					{
+						var inner = details.querySelector('.details-inner');
+						if (inner && !inner.querySelector('.detail-tab-pane.active'))
+						{
+							var panes = inner.querySelectorAll('.detail-tab-pane');
+							var btns  = inner.querySelectorAll('.detail-tab-btn');
+							if (panes[0]) panes[0].classList.add('active');
+							if (btns[0])  btns[0].classList.add('active');
+						}
+					}
+				});
+				details.addEventListener('click', function(e)
+				{
+					var btn = e.target.closest('.detail-tab-btn');
+					if (!btn) return;
+					var tabKey = btn.getAttribute('data-tab');
+					var inner  = details.querySelector('.details-inner');
+					if (!inner) return;
+					inner.querySelectorAll('.detail-tab-btn').forEach(function(b) { b.classList.remove('active'); b.setAttribute('aria-selected', 'false'); });
+					inner.querySelectorAll('.detail-tab-pane').forEach(function(p) { p.classList.remove('active'); });
+					btn.classList.add('active');
+					btn.setAttribute('aria-selected', 'true');
+					var pane = inner.querySelector('[data-pane="' + tabKey + '"]');
+					if (pane) pane.classList.add('active');
+				});
+			}
+
+			function openPopup(targetHref, label, trigger)
+			{
+				var card = document.querySelector(targetHref);
+				if (!card) return false;
+				currentTarget = targetHref;
+				triggerEl = trigger || null;
+
+				popupBody.innerHTML = '';
+				var clone = card.cloneNode(true);
+				// Strip all id attributes from the clone to prevent duplicate ids in the DOM
+				clone.removeAttribute('id');
+				clone.querySelectorAll('[id]').forEach(function(el) { el.removeAttribute('id'); });
+				var clonedDetails = clone.querySelector('.card-details');
+				if (clonedDetails)
+				{
+					clonedDetails.open = true;
+					wireDetailTabs(clonedDetails);
+					var inner = clonedDetails.querySelector('.details-inner');
+					if (inner)
+					{
+						var firstPane = inner.querySelector('.detail-tab-pane');
+						var firstBtn  = inner.querySelector('.detail-tab-btn');
+						if (firstPane && !firstPane.classList.contains('active')) firstPane.classList.add('active');
+						if (firstBtn  && !firstBtn.classList.contains('active'))  { firstBtn.classList.add('active'); firstBtn.setAttribute('aria-selected', 'true'); }
+					}
+				}
+				popupBody.appendChild(clone);
+
+				var titleEl = document.getElementById('action-popup-title');
+				if (titleEl) titleEl.textContent = label || 'Strategic Action';
+
+				overlay.classList.add('open');
+				overlay.removeAttribute('aria-hidden');
+				document.body.style.overflow = 'hidden';
+				closeX.focus();
+				return true;
+			}
+
+			function closePopup()
+			{
+				overlay.classList.remove('open');
+				overlay.setAttribute('aria-hidden', 'true');
+				document.body.style.overflow = '';
+				currentTarget = null;
+				if (triggerEl) { triggerEl.focus(); triggerEl = null; }
+			}
+
+			closeX.addEventListener('click', closePopup);
+			closeBtn.addEventListener('click', closePopup);
+
+			gotoBtn.addEventListener('click', function()
+			{
+				if (!currentTarget) { closePopup(); return; }
+				var card = document.querySelector(currentTarget);
+				closePopup();
+				if (card) revealActionCard(card);
 			});
-		});
+
+			overlay.addEventListener('click', function(e)
+			{
+				if (e.target === overlay) closePopup();
+			});
+
+			document.addEventListener('keydown', function(e)
+			{
+				if ((e.key === 'Escape' || e.key === 'Esc') && overlay.classList.contains('open')) closePopup();
+			});
+
+			document.querySelectorAll('a.change-link').forEach(function(link)
+			{
+				link.addEventListener('click', function(e)
+				{
+					var targetHref = link.getAttribute('href');
+					var label = link.getAttribute('aria-label') || link.textContent.trim();
+					if (openPopup(targetHref, label, link)) e.preventDefault();
+				});
+			});
+		}());
 
 		// Back to top
 		var topBtn = document.createElement('button');

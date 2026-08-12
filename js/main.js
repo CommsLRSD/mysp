@@ -1462,3 +1462,12 @@
 	document.addEventListener('mysp:filters-applied', render);
 	render();
 })();
+
+	(function ()
+	{
+		if (!('serviceWorker' in navigator)) return;
+		window.addEventListener('load', function ()
+		{
+			navigator.serviceWorker.register('/mysp/sw.js', { scope: '/mysp/' });
+		});
+	})();

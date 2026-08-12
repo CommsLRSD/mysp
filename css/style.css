@@ -1678,7 +1678,7 @@ section.single-section-active {
 }
 #priorities-main { flex: 1 1 0; min-width: 0; }
 #priorities-filter-bar {
-	display: none;
+	display: block;
 	flex: 0 0 230px;
 	position: sticky;
 	top: 1rem;

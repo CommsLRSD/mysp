@@ -1390,7 +1390,6 @@ section.single-section-active {
 	margin: 0 auto 1.75rem;
 }
 .wide-section .section-intro-body {
-	max-width: var(--measure);
 	margin: 0 0 1.5rem;
 }
 
@@ -1399,14 +1398,15 @@ section.single-section-active {
 	display: flex;
 	gap: 1.75rem;
 	align-items: flex-start;
+	width: 100%;
 }
 .intro-body-text {
-	flex: 0 1 66%;
+	flex: 1 1 auto;
 	min-width: 0;
 	margin: 0;
 }
 .intro-stage-visual {
-	flex: 1 1 34%;
+	flex: 0 1 24rem;
 	display: flex;
 	flex-direction: column;
 	gap: 0.7rem;
@@ -1415,7 +1415,8 @@ section.single-section-active {
 	border-radius: 8px;
 	min-width: 0;
 	max-width: 24rem;
-	width: 100%;
+	width: min(100%, 24rem);
+	margin-left: auto;
 	align-self: stretch;
 	justify-content: center;
 }

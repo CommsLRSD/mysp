@@ -1027,33 +1027,24 @@
 		})();
 
 /* ══════════════════════════════════════════════════════════════════
-	   Glossary links, v82.
-	   Three jobs: remember where the reader was, open the collapsed
-	   glossary group they are being sent into, and offer them the way
-	   back. Everything degrades to a plain in-page anchor if JS fails,
-	   which is why the links are real hrefs and not buttons.
+	   Glossary links, v84.
+	   Clicking a term opens a popup dialog showing the definition.
+	   The popup has a Close button and a link to the full Words We Use
+	   section. Everything degrades to a plain in-page anchor if JS fails.
 	   ══════════════════════════════════════════════════════════════════ */
 	(function ()
 	{
-		var bar    = document.getElementById('gloss-return');
-		if (!bar) { return; }
-		var link   = bar.querySelector('.gloss-return-link');
-		var label  = bar.querySelector('.gloss-return-text');
-		var origin = null;      /* {cardId, pane, fallbackId} */
-
 		/* Open the <details> group a term sits inside, then flag it. */
 		function reveal(id)
 		{
 			var dt = document.getElementById(id);
 			if (!dt) { return; }
-			/* Expand the parent story-section if it is currently collapsed */
 			if (window.MYSP && window.MYSP.expandSection) { window.MYSP.expandSection(dt); }
 			var group = dt.closest('details.glossary-group');
 			if (group && !group.open) { group.open = true; }
 			document.querySelectorAll('.glossary-list dt.gloss-hit')
 				.forEach(function (e) { e.classList.remove('gloss-hit'); });
 			dt.classList.add('gloss-hit');
-			/* The group may have just opened, so scroll after layout. */
 			requestAnimationFrame(function ()
 			{
 				dt.scrollIntoView({ block: 'center',
@@ -1062,32 +1053,98 @@
 			});
 		}
 
+		/* Build the popup once and reuse it. */
+		var popup = document.createElement('div');
+		popup.id = 'gloss-popup';
+		popup.setAttribute('role', 'dialog');
+		popup.setAttribute('aria-modal', 'true');
+		popup.setAttribute('aria-labelledby', 'gloss-popup-title');
+		popup.hidden = true;
+		popup.innerHTML =
+			'<div class="gloss-popup-backdrop"></div>' +
+			'<div class="gloss-popup-box">' +
+			  '<button class="gloss-popup-close" type="button" aria-label="Close">\u00d7</button>' +
+			  '<p class="gloss-popup-eyebrow">What this means</p>' +
+			  '<h3 id="gloss-popup-title" class="gloss-popup-term"></h3>' +
+			  '<div class="gloss-popup-def"></div>' +
+			  '<div class="gloss-popup-actions">' +
+			    '<button class="gloss-popup-btn-close" type="button">Close</button>' +
+			    '<a class="gloss-popup-btn-goto" href="#section-glossary">Go to Words We Use</a>' +
+			  '</div>' +
+			'</div>';
+		document.body.appendChild(popup);
+
+		var popupTerm = popup.querySelector('.gloss-popup-term');
+		var popupDef  = popup.querySelector('.gloss-popup-def');
+		var popupGoto = popup.querySelector('.gloss-popup-btn-goto');
+		var currentTermId = null;
+
+		function closePopup()
+		{
+			popup.hidden = true;
+			currentTermId = null;
+		}
+
+		function openPopup(termId)
+		{
+			var dt = document.getElementById(termId);
+			if (!dt) { return false; }
+			var dd = dt.nextElementSibling;
+			popupTerm.textContent = dt.textContent;
+			popupDef.innerHTML = dd ? dd.innerHTML : '';
+			/* Update the "Go to Words We Use" link to land on this term */
+			popupGoto.setAttribute('href', '#' + termId);
+			currentTermId = termId;
+			popup.hidden = false;
+			/* Move focus into the popup */
+			var firstBtn = popup.querySelector('.gloss-popup-btn-close');
+			if (firstBtn) { firstBtn.focus(); }
+			return true;
+		}
+
+		/* Close buttons */
+		popup.querySelector('.gloss-popup-close').addEventListener('click', closePopup);
+		popup.querySelector('.gloss-popup-btn-close').addEventListener('click', closePopup);
+
+		/* Backdrop click closes */
+		popup.querySelector('.gloss-popup-backdrop').addEventListener('click', closePopup);
+
+		/* Escape key closes */
+		document.addEventListener('keydown', function (ev)
+		{
+			if (!popup.hidden && (ev.key === 'Escape' || ev.key === 'Esc')) { closePopup(); }
+		});
+
+		/* "Go to Words We Use" navigates and highlights the term */
+		popupGoto.addEventListener('click', function (ev)
+		{
+			ev.preventDefault();
+			var id = currentTermId;
+			closePopup();
+			if (id) { reveal(id); }
+			/* Navigate to the glossary section */
+			var section = document.getElementById('section-glossary');
+			if (section)
+			{
+				if (window.MYSP && typeof window.MYSP.goToSection === 'function')
+					{ window.MYSP.goToSection(section); }
+				else
+					{ section.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); }
+			}
+		});
+
+		/* Intercept gloss-link clicks — show popup instead of navigating */
 		document.addEventListener('click', function (ev)
 		{
 			var a = ev.target.closest ? ev.target.closest('.gloss-link') : null;
 			if (!a) { return; }
-
-			var card = a.closest('article.scorecard');
-			var pane = a.closest('.detail-tab-pane');
-			var near = a.closest('[id]');
-			origin = {
-				cardId:     card ? card.id : null,
-				pane:       pane ? pane.getAttribute('data-pane') : null,
-				fallbackId: near ? near.id : null
-			};
-
-			if (label)
+			ev.preventDefault();
+			var termId = (a.getAttribute('href') || '').replace(/^#/, '');
+			if (!openPopup(termId))
 			{
-				var num = card ? card.id.replace('action-', '').replace(/-/g, '.') : null;
-				label.textContent = num ? ('Back to Action ' + num) : 'Back to where you were';
+				/* Fallback: no matching dt found, navigate normally */
+				window.location.hash = '#' + termId;
 			}
-			if (link)
-			{
-				link.setAttribute('href', '#' + (origin.cardId || origin.fallbackId || 'wide-content'));
-			}
-			bar.hidden = false;
-
-			reveal(a.getAttribute('href').slice(1));
 		});
 
 		/* Someone arriving on a #g- link from outside, or using back/forward. */
@@ -1097,25 +1154,6 @@
 		}
 		window.addEventListener('hashchange', onHash);
 		onHash();
-
-		/* Going back: re-open the card and restore the tab they were reading. */
-		if (link)
-		{
-			link.addEventListener('click', function ()
-			{
-				if (!origin || !origin.cardId) { return; }
-				var card = document.getElementById(origin.cardId);
-				if (!card) { return; }
-				var det = card.querySelector('details.card-details');
-				if (det && !det.open) { det.open = true; }
-				if (origin.pane)
-				{
-					var btn = card.querySelector('.detail-tab-btn[data-tab="' + origin.pane + '"]');
-					if (btn) { btn.click(); }
-				}
-				bar.hidden = true;
-			});
-		}
 	})();
 /* ══════════════════════════════════════════════════════════════════
    Priority filter sidebar, v84.
@@ -1150,7 +1188,7 @@
 		return (title ? title.textContent : el.textContent).trim();
 	}
 
-	function buttonRow(label, sourceButtons, entries)
+	function radioRow(label, sourceButtons, entries, groupName)
 	{
 		var row = document.createElement('div');
 		row.className = 'ptb-row';
@@ -1158,16 +1196,27 @@
 		caption.className = 'ptb-label';
 		caption.textContent = label;
 		row.appendChild(caption);
-		sourceButtons.forEach(function (source)
+		var list = document.createElement('div');
+		list.className = 'ptb-radio-list';
+		sourceButtons.forEach(function (source, i)
 		{
-			var btn = document.createElement('button');
-			btn.type = 'button';
-			btn.className = 'ptb-btn';
-			btn.textContent = labelOf(source);
-			btn.addEventListener('click', function () { source.click(); });
-			row.appendChild(btn);
-			entries.push({ btn: btn, source: source });
+			var id = 'ptb-radio-' + groupName + '-' + i;
+			var lbl = document.createElement('label');
+			lbl.className = 'ptb-radio-label';
+			lbl.setAttribute('for', id);
+			var inp = document.createElement('input');
+			inp.type = 'radio';
+			inp.name = 'ptb-' + groupName;
+			inp.id = id;
+			inp.className = 'ptb-radio';
+			if (source.classList.contains('active')) { inp.checked = true; }
+			inp.addEventListener('change', function () { source.click(); });
+			lbl.appendChild(inp);
+			lbl.appendChild(document.createTextNode('\u00a0' + labelOf(source)));
+			list.appendChild(lbl);
+			entries.push({ radio: inp, source: source });
 		});
+		row.appendChild(list);
 		return row;
 	}
 
@@ -1186,9 +1235,9 @@
 	bar.appendChild(head);
 
 	var entries = [];
-	bar.appendChild(buttonRow('Priority', sourcePriorities, entries));
-	bar.appendChild(buttonRow('Stage', sourceStages, entries));
-	bar.appendChild(buttonRow('Public data', sourceData, entries));
+	bar.appendChild(radioRow('Priority', sourcePriorities, entries, 'priority'));
+	bar.appendChild(radioRow('Stage', sourceStages, entries, 'stage'));
+	bar.appendChild(radioRow('Public data', sourceData, entries, 'data'));
 
 	var searchRow = document.createElement('div');
 	searchRow.className = 'ptb-row ptb-search';
@@ -1250,9 +1299,7 @@
 	{
 		entries.forEach(function (entry)
 		{
-			var on = entry.source.classList.contains('active');
-			entry.btn.classList.toggle('active', on);
-			entry.btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+			entry.radio.checked = entry.source.classList.contains('active');
 		});
 		var total = totalActions;
 		var shown = sections.reduce(function (sum, s)

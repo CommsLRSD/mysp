@@ -1642,7 +1642,7 @@ section.single-section-active {
 /* ── Priorities two-column layout ── */
 #priorities-layout {
 	display: flex;
-	flex-direction: row-reverse;   /* filter aside renders first in source → top on mobile */
+	flex-direction: row;   /* priorities left, filter panel right */
 	align-items: flex-start;
 	gap: 1.5rem;
 }
@@ -1718,3 +1718,122 @@ section.single-section-active {
 	margin-bottom: 0.45rem;
 }
 .wide-section-header { padding-bottom: 1rem; }
+
+/* ── Glossary popup dialog ── */
+#gloss-popup[hidden] { display: none; }
+#gloss-popup {
+	position: fixed;
+	inset: 0;
+	z-index: 1200;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 1rem;
+}
+.gloss-popup-backdrop {
+	position: absolute;
+	inset: 0;
+	background: rgba(0, 0, 0, 0.45);
+}
+.gloss-popup-box {
+	position: relative;
+	background: var(--white);
+	border-radius: 14px;
+	padding: 1.5rem 1.5rem 1.25rem;
+	max-width: 480px;
+	width: 100%;
+	box-shadow: 0 12px 40px rgba(0, 0, 0, 0.22);
+	z-index: 1;
+}
+.gloss-popup-close {
+	position: absolute;
+	top: 0.75rem;
+	right: 0.75rem;
+	background: none;
+	border: none;
+	font-size: 1.4rem;
+	line-height: 1;
+	padding: 0.2rem 0.5rem;
+	cursor: pointer;
+	color: #666;
+	border-radius: 6px;
+}
+.gloss-popup-close:hover { background: rgba(0,0,0,0.06); }
+.gloss-popup-eyebrow {
+	font-size: 0.68rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.09em;
+	color: rgba(38, 78, 116, 0.55);
+	margin: 0 0 0.3rem;
+}
+.gloss-popup-term {
+	font-family: var(--header-font);
+	font-size: 1.05rem;
+	font-weight: 700;
+	color: var(--primary);
+	margin: 0 0 0.65rem;
+}
+.gloss-popup-def {
+	font-size: 0.9rem;
+	line-height: 1.65;
+	color: var(--text);
+	margin: 0 0 1.25rem;
+}
+.gloss-popup-actions {
+	display: flex;
+	gap: 0.6rem;
+	justify-content: flex-end;
+	flex-wrap: wrap;
+}
+.gloss-popup-btn-close {
+	font-family: var(--body-font);
+	font-size: 0.82rem;
+	font-weight: 600;
+	color: var(--primary);
+	background: none;
+	border: 1px solid rgba(38, 78, 116, 0.28);
+	border-radius: 8px;
+	padding: 0.45rem 1rem;
+	cursor: pointer;
+}
+.gloss-popup-btn-close:hover { background: rgba(38, 78, 116, 0.06); }
+.gloss-popup-btn-goto {
+	font-family: var(--body-font);
+	font-size: 0.82rem;
+	font-weight: 600;
+	color: var(--white);
+	background: var(--primary);
+	border: 1px solid var(--primary);
+	border-radius: 8px;
+	padding: 0.45rem 1rem;
+	text-decoration: none;
+	display: inline-block;
+}
+.gloss-popup-btn-goto:hover { background: #1a3a58; border-color: #1a3a58; }
+
+/* ── Priority toolbar: radio-button list variant ── */
+.ptb-radio-list {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+	flex: 1 1 auto;
+}
+.ptb-radio-label {
+	display: flex;
+	align-items: center;
+	gap: 0.45rem;
+	font-family: var(--body-font);
+	font-size: 0.82rem;
+	color: var(--text);
+	cursor: pointer;
+	padding: 0.1rem 0;
+}
+.ptb-radio-label:hover { color: var(--primary); }
+.ptb-radio {
+	accent-color: var(--primary);
+	width: 1rem;
+	height: 1rem;
+	flex-shrink: 0;
+	cursor: pointer;
+}

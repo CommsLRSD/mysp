@@ -1,4 +1,5 @@
 var CACHE_NAME = 'mysp-shell-v1';
+var CACHE_PREFIX = 'mysp-';
 var CORE_ASSETS = [
 	'/mysp/',
 	'/mysp/index.html',
@@ -31,7 +32,7 @@ self.addEventListener('activate', function (event)
 			return Promise.all(
 				keys.map(function (key)
 				{
-					if (key !== CACHE_NAME) return caches.delete(key);
+					if (key !== CACHE_NAME && key.indexOf(CACHE_PREFIX) === 0) return caches.delete(key);
 				})
 			);
 		}).then(function ()
@@ -56,12 +57,10 @@ self.addEventListener('fetch', function (event)
 				if (!response) throw new Error('Empty network response');
 				if (response.status !== 200 || response.type !== 'basic') return response;
 				var responseClone = response.clone();
-				event.waitUntil(
-					caches.open(CACHE_NAME).then(function (cache)
-					{
-						return cache.put(event.request, responseClone);
-					})
-				);
+				caches.open(CACHE_NAME).then(function (cache)
+				{
+					return cache.put(event.request, responseClone);
+				}).catch(function () {});
 				return response;
 			}).catch(function ()
 			{

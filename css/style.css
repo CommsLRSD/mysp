@@ -1121,9 +1121,9 @@
 		body.nav-open { overflow: hidden; }
 		#wide-content { padding-top: var(--mobile-section-bar-h); }
 		/* Clears the fixed bar so anchor jumps do not land under it. */
-		html { scroll-padding-top: 60px; }
-		:target { scroll-margin-top: 60px; }
-		.scorecard, .story-section, .wide-section { scroll-margin-top: 60px; }
+		html { scroll-padding-top: var(--mobile-section-bar-h); }
+		:target { scroll-margin-top: var(--mobile-section-bar-h); }
+		.scorecard, .story-section, .wide-section { scroll-margin-top: var(--mobile-section-bar-h); }
 	}
 
 	@media print { #section-bar, #nav-scrim, #nav-toggle, #nav-close { display: none !important; } }
@@ -1693,17 +1693,17 @@ section.single-section-active {
 		flex: none;
 		width: min(21rem, calc(100vw - 0.75rem));
 		position: fixed;
-		top: 50%;
+		top: 1rem;
 		right: 0;
 		z-index: 970;
-		max-height: calc(100vh - 7rem);
-		max-height: calc(100dvh - 7rem);
+		max-height: calc(100vh - 2rem);
+		max-height: calc(100dvh - 2rem);
 		overflow: visible;
-		transform: translate(calc(100% - 3.35rem), -50%);
+		transform: translateX(calc(100% - 3.35rem));
 		transition: transform 0.24s ease;
 		pointer-events: auto;
 	}
-	#priorities-filter-bar.ptb-open { transform: translate(0, -50%); }
+	#priorities-filter-bar.ptb-open { transform: translateX(0); }
 	#priorities-filter-bar .priority-toolbar {
 		margin: 0;
 		padding-left: 4.15rem;
@@ -1739,8 +1739,8 @@ section.single-section-active {
 		box-shadow: 0 10px 28px rgba(18, 34, 52, 0.18);
 	}
 	.ptb-mobile-toggle:focus-visible {
-		outline: 3px solid #fff;
-		outline-offset: -4px;
+		outline: 3px solid #10263c;
+		outline-offset: 2px;
 	}
 }
 
@@ -1771,11 +1771,11 @@ section.single-section-active {
 	.side-panel { padding: 0.8rem; }
 	#priorities-filter-bar {
 		top: calc(var(--mobile-section-bar-h) + 1rem);
-		transform: translate(calc(100% - 3.35rem), 0);
-		max-height: calc(100vh - (var(--mobile-section-bar-h) + 1rem));
-		max-height: calc(100dvh - (var(--mobile-section-bar-h) + 1rem));
+		transform: translateX(calc(100% - 3.35rem));
+		max-height: calc(100vh - var(--mobile-section-bar-h) - 2rem);
+		max-height: calc(100dvh - var(--mobile-section-bar-h) - 2rem);
 	}
-	#priorities-filter-bar.ptb-open { transform: translate(0, 0); }
+	#priorities-filter-bar.ptb-open { transform: translateX(0); }
 	#priorities-filter-bar .priority-toolbar { margin: 0; }
 }
 

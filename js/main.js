@@ -841,13 +841,12 @@
 			var mq = window.matchMedia('(max-width: 768px)');
 			var sections = Array.prototype.slice.call(
 				document.querySelectorAll('section[id^="section-"]'));
-			var hero = document.querySelector('.wide-hero');
-			var BAR_H = 52;
+			var BAR_H = 52; /* used only for section-label tracking; the bar stays visible on mobile */
 
 			bar.hidden = false;
 			scrim.hidden = false;
 
-			/* ── section tracking ── */
+			/* ── section tracking for the always-visible mobile bar ── */
 			function currentLabel() {
 				var found = null;
 				for (var i = 0; i < sections.length; i++) {
@@ -1321,12 +1320,21 @@
 	filterBar.appendChild(bar);
 
 	var narrowMq = window.matchMedia('(max-width: 1100px)');
+	function onPanelKeydown(e)
+	{
+		if (e.key === 'Escape' && filterBar.classList.contains('ptb-open')) { setPanelOpen(false); }
+	}
 	function setPanelOpen(open)
 	{
 		var next = !!open && narrowMq.matches;
 		filterBar.classList.toggle('ptb-open', next);
 		mobileToggle.setAttribute('aria-expanded', next ? 'true' : 'false');
 		mobileToggle.textContent = next ? 'Close filters' : 'Review & filter';
+		if (next) {
+			document.removeEventListener('keydown', onPanelKeydown);
+			document.addEventListener('keydown', onPanelKeydown);
+		}
+		else document.removeEventListener('keydown', onPanelKeydown);
 	}
 	function syncPanel()
 	{
@@ -1337,11 +1345,6 @@
 		if (!narrowMq.matches) { return; }
 		setPanelOpen(!filterBar.classList.contains('ptb-open'));
 	});
-	function onPanelKeydown(e)
-	{
-		if (e.key === 'Escape' && filterBar.classList.contains('ptb-open')) { setPanelOpen(false); }
-	}
-	document.addEventListener('keydown', onPanelKeydown);
 	narrowMq.addEventListener ? narrowMq.addEventListener('change', syncPanel) : narrowMq.addListener(syncPanel);
 	syncPanel();
 

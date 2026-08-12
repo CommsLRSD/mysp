@@ -53,12 +53,15 @@ self.addEventListener('fetch', function (event)
 			if (cached) return cached;
 			return fetch(event.request).then(function (response)
 			{
-				if (!response || response.status !== 200 || response.type !== 'basic') return response;
+				if (!response) throw new Error('Empty network response');
+				if (response.status !== 200 || response.type !== 'basic') return response;
 				var responseClone = response.clone();
-				caches.open(CACHE_NAME).then(function (cache)
-				{
-					cache.put(event.request, responseClone);
-				});
+				event.waitUntil(
+					caches.open(CACHE_NAME).then(function (cache)
+					{
+						return cache.put(event.request, responseClone);
+					})
+				);
 				return response;
 			}).catch(function ()
 			{

@@ -1728,11 +1728,6 @@ section.single-section-active {
 		pointer-events: none;
 	}
 }
-@media (min-width: 1101px) {
-	#filter-control-source {
-		display: none;
-	}
-}
 
 /* Hide entirely when not on a Four Priorities section (applies at all viewport sizes). */
 #priorities-filter-bar.ptb-out {

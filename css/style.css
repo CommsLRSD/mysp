@@ -1717,11 +1717,11 @@ section.single-section-active {
 		opacity: 0;
 		pointer-events: none;
 	}
-	/* Hide entirely when the user has scrolled out of the priorities section. */
-	#priorities-filter-bar.ptb-out {
-		visibility: hidden;
-		pointer-events: none;
-	}
+}
+
+/* Hide entirely when not on a Four Priorities section (applies at all viewport sizes). */
+#priorities-filter-bar.ptb-out {
+	display: none !important;
 }
 
 .ptb-mobile-toggle { display: none; }
@@ -1737,7 +1737,7 @@ section.single-section-active {
 		padding: 0.5rem 0.25rem;
 		border: 0;
 		border-right: 1px solid rgba(38, 78, 116, 0.14);
-		border-radius: 8px 0 0 8px;
+		border-radius: 0 8px 8px 0;
 		background: var(--primary);
 		color: #fff;
 		font-family: var(--header-font);

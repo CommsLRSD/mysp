@@ -1355,10 +1355,9 @@
 	if (prioritiesMain && window.IntersectionObserver) {
 		var sectionObserver = new IntersectionObserver(function (entries) {
 			entries.forEach(function (entry) {
-				if (!narrowMq.matches) { return; }
 				if (!entry.isIntersecting) {
+					if (narrowMq.matches) { setPanelOpen(false); }
 					filterBar.classList.add('ptb-out');
-					setPanelOpen(false);
 				} else {
 					filterBar.classList.remove('ptb-out');
 				}

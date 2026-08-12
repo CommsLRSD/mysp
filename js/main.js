@@ -1259,13 +1259,13 @@
 	mobileToggle.className = 'ptb-mobile-toggle';
 	mobileToggle.setAttribute('aria-controls', 'priorities-filter-bar');
 	mobileToggle.setAttribute('aria-expanded', 'false');
-	mobileToggle.textContent = 'Review & filter';
+	mobileToggle.textContent = 'Filter';
 
 	var head = document.createElement('div');
 	head.className = 'ptb-head';
 	var titleEl = document.createElement('p');
 	titleEl.className = 'ptb-title';
-	titleEl.textContent = 'Review and filter';
+	titleEl.textContent = 'Filter';
 	var count = document.createElement('p');
 	count.className = 'ptb-count';
 	head.appendChild(titleEl);
@@ -1329,7 +1329,7 @@
 		var next = !!open && narrowMq.matches;
 		filterBar.classList.toggle('ptb-open', next);
 		mobileToggle.setAttribute('aria-expanded', next ? 'true' : 'false');
-		mobileToggle.textContent = next ? 'Close filters' : 'Review & filter';
+		mobileToggle.textContent = next ? 'Close' : 'Filter';
 		if (next) {
 			document.removeEventListener('keydown', onPanelKeydown);
 			document.addEventListener('keydown', onPanelKeydown);

@@ -1666,6 +1666,9 @@ section.single-section-active {
 	padding-top: 0.85rem;
 	border-top: 1px solid var(--rule);
 }
+@media (min-width: 1101px) {
+	#side-nav #filter-control-source { display: none; }
+}
 .side-panel-translate { background: transparent; border: 0; padding: 0; }
 .side-logo-block { border-bottom: 0; padding-bottom: 0.25rem; }
 

@@ -341,6 +341,7 @@
 
 		// Signs of Change links — open action popup dialog instead of navigating directly.
 		// The href stays as a no-JS fallback.
+		// "Read the full picture" summaries in priority sections also use this popup.
 		(function()
 		{
 			var overlay   = document.getElementById('action-popup-overlay');
@@ -385,7 +386,7 @@
 				});
 			}
 
-			function openPopup(targetHref, label, trigger)
+			function openPopup(targetHref, label, trigger, showGoto)
 			{
 				var card = document.querySelector(targetHref);
 				if (!card) return false;
@@ -416,6 +417,7 @@
 				var titleEl = document.getElementById('action-popup-title');
 				if (titleEl) titleEl.textContent = label || 'Strategic Action';
 
+				gotoBtn.hidden = (showGoto === false);
 				overlay.classList.add('open');
 				overlay.removeAttribute('aria-hidden');
 				document.body.style.overflow = 'hidden';
@@ -429,6 +431,7 @@
 				overlay.setAttribute('aria-hidden', 'true');
 				document.body.style.overflow = '';
 				currentTarget = null;
+				gotoBtn.hidden = false;
 				if (triggerEl) { triggerEl.focus(); triggerEl = null; }
 			}
 
@@ -460,6 +463,20 @@
 					var targetHref = link.getAttribute('href');
 					var label = link.getAttribute('aria-label') || link.textContent.trim();
 					if (openPopup(targetHref, label, link)) e.preventDefault();
+				});
+			});
+
+			// "Read the full picture" in priority-section scorecards → popup (no goto button).
+			document.querySelectorAll('.wide-section .scorecard').forEach(function(card)
+			{
+				var summary = card.querySelector('.card-details > summary');
+				if (!summary || !card.id) return;
+				summary.addEventListener('click', function(e)
+				{
+					e.preventDefault();
+					var numLabel = card.querySelector('.card-band-num-label');
+					var label = numLabel ? numLabel.textContent.trim() : 'Strategic Action';
+					openPopup('#' + card.id, label, summary, false);
 				});
 			});
 		}());
@@ -1101,23 +1118,23 @@
 		}
 	})();
 /* ══════════════════════════════════════════════════════════════════
-   In-page priority toolbar, v83.
-   The only way to review and filter the twenty-five actions used to be
-   the sidebar, which is off to one side on a desktop and behind a
-   drawer on a phone. Each priority section now carries the same
-   controls directly above its cards.
+   Priority filter sidebar, v84.
+   One "Review and filter these actions" panel lives in the
+   #priorities-filter-bar aside, to the right of all four priority
+   sections on wide viewports and above them on narrow ones.
    IT HOLDS NO STATE OF ITS OWN. Every control proxies a click to the
-   matching sidebar control and the whole toolbar re-reads the sidebar
+   matching sidebar control and the whole panel re-reads the sidebar
    after each filter pass, so there is still one source of truth and
    nothing to keep in sync by hand.
    ══════════════════════════════════════════════════════════════════ */
 (function ()
 {
 	var priorityNav = document.getElementById('priority-nav');
+	var filterBar = document.getElementById('priorities-filter-bar');
 	var sections = Array.prototype.slice.call(document.querySelectorAll('.wide-section'));
 	var searchInput = document.getElementById('action-search');
 	var clearBtn = document.getElementById('clear-filters');
-	if (!priorityNav || !sections.length) { return; }
+	if (!priorityNav || !filterBar || !sections.length) { return; }
 
 	var sourcePriorities = Array.prototype.slice.call(
 		priorityNav.querySelectorAll('.pnav-item-all, .pnav-item'));
@@ -1125,7 +1142,6 @@
 		document.querySelectorAll('.filter-chip[data-filter-type="stage"]'));
 	var sourceData = Array.prototype.slice.call(
 		document.querySelectorAll('.filter-chip[data-filter-type="datahub"]'));
-	var toolbars = [];
 	var totalActions = document.querySelectorAll('.scorecard').length;
 
 	function labelOf(el)
@@ -1155,72 +1171,65 @@
 		return row;
 	}
 
-	function build(section)
+	var bar = document.createElement('div');
+	bar.className = 'priority-toolbar';
+
+	var head = document.createElement('div');
+	head.className = 'ptb-head';
+	var titleEl = document.createElement('p');
+	titleEl.className = 'ptb-title';
+	titleEl.textContent = 'Review and filter';
+	var count = document.createElement('p');
+	count.className = 'ptb-count';
+	head.appendChild(titleEl);
+	head.appendChild(count);
+	bar.appendChild(head);
+
+	var entries = [];
+	bar.appendChild(buttonRow('Priority', sourcePriorities, entries));
+	bar.appendChild(buttonRow('Stage', sourceStages, entries));
+	bar.appendChild(buttonRow('Public data', sourceData, entries));
+
+	var searchRow = document.createElement('div');
+	searchRow.className = 'ptb-row ptb-search';
+	var searchLabel = document.createElement('label');
+	searchLabel.className = 'ptb-label';
+	searchLabel.textContent = 'Search';
+	var input = document.createElement('input');
+	input.type = 'search';
+	input.className = 'ptb-search-input';
+	input.placeholder = 'Search\u2026';
+	input.autocomplete = 'off';
+	input.id = 'ptb-search-global';
+	searchLabel.setAttribute('for', input.id);
+	var clear = document.createElement('button');
+	clear.type = 'button';
+	clear.className = 'ptb-clear';
+	clear.textContent = 'Clear filters';
+	clear.hidden = true;
+	searchRow.appendChild(searchLabel);
+	searchRow.appendChild(input);
+	searchRow.appendChild(clear);
+	bar.appendChild(searchRow);
+
+	if (searchInput)
 	{
-		var bar = document.createElement('div');
-		bar.className = 'priority-toolbar';
-
-		var head = document.createElement('div');
-		head.className = 'ptb-head';
-		var title = document.createElement('p');
-		title.className = 'ptb-title';
-		title.textContent = 'Review and filter these actions';
-		var count = document.createElement('p');
-		count.className = 'ptb-count';
-		head.appendChild(title);
-		head.appendChild(count);
-		bar.appendChild(head);
-
-		var entries = [];
-		bar.appendChild(buttonRow('Priority', sourcePriorities, entries));
-		bar.appendChild(buttonRow('Stage', sourceStages, entries));
-		bar.appendChild(buttonRow('Public data', sourceData, entries));
-
-		var searchRow = document.createElement('div');
-		searchRow.className = 'ptb-row ptb-search';
-		var searchLabel = document.createElement('label');
-		searchLabel.className = 'ptb-label';
-		searchLabel.textContent = 'Search';
-		var input = document.createElement('input');
-		input.type = 'search';
-		input.className = 'ptb-search-input';
-		input.placeholder = 'Search all ' + totalActions + ' actions\u2026';
-		input.autocomplete = 'off';
-		input.id = 'ptb-search-' + section.id;
-		searchLabel.setAttribute('for', input.id);
-		var clear = document.createElement('button');
-		clear.type = 'button';
-		clear.className = 'ptb-clear';
-		clear.textContent = 'Clear filters';
-		clear.hidden = true;
-		searchRow.appendChild(searchLabel);
-		searchRow.appendChild(input);
-		searchRow.appendChild(clear);
-		bar.appendChild(searchRow);
-
-		if (searchInput)
+		input.addEventListener('input', function ()
 		{
-			input.addEventListener('input', function ()
-			{
-				searchInput.value = input.value;
-				searchInput.dispatchEvent(new Event('input', { bubbles: true }));
-			});
-		}
-		if (clearBtn)
-		{
-			clear.addEventListener('click', function ()
-			{
-				clearBtn.click();
-				input.focus();
-			});
-		}
-
-		var grid = section.querySelector('.cards-grid');
-		if (grid) { section.insertBefore(bar, grid); }
-		else { section.appendChild(bar); }
-
-		toolbars.push({ section: section, entries: entries, count: count, input: input, clear: clear });
+			searchInput.value = input.value;
+			searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+		});
 	}
+	if (clearBtn)
+	{
+		clear.addEventListener('click', function ()
+		{
+			clearBtn.click();
+			input.focus();
+		});
+	}
+
+	filterBar.appendChild(bar);
 
 	/* clearBtn.hidden is set AFTER applyFilters dispatches its event, so it
 	   would always be one pass stale here. Read the controls instead. */
@@ -1239,29 +1248,28 @@
 
 	function render()
 	{
-		toolbars.forEach(function (bar)
+		entries.forEach(function (entry)
 		{
-			bar.entries.forEach(function (entry)
-			{
-				var on = entry.source.classList.contains('active');
-				entry.btn.classList.toggle('active', on);
-				entry.btn.setAttribute('aria-pressed', on ? 'true' : 'false');
-			});
-			var total = bar.section.querySelectorAll('.scorecard').length;
-			var shown = bar.section.classList.contains('priority-hidden')
-				? 0
-				: bar.section.querySelectorAll('.scorecard:not(.js-filtered-out)').length;
-			bar.count.innerHTML = 'Showing <strong>' + shown + '</strong> of ' + total
-				+ ' action' + (total === 1 ? '' : 's') + ' in this priority';
-			if (searchInput && document.activeElement !== bar.input)
-			{
-				bar.input.value = searchInput.value;
-			}
-			bar.clear.hidden = !filtersActive();
+			var on = entry.source.classList.contains('active');
+			entry.btn.classList.toggle('active', on);
+			entry.btn.setAttribute('aria-pressed', on ? 'true' : 'false');
 		});
+		var total = totalActions;
+		var shown = sections.reduce(function (sum, s)
+		{
+			return sum + (s.classList.contains('priority-hidden')
+				? 0
+				: s.querySelectorAll('.scorecard:not(.js-filtered-out)').length);
+		}, 0);
+		count.innerHTML = 'Showing <strong>' + shown + '</strong> of ' + total
+			+ ' action' + (total === 1 ? '' : 's');
+		if (searchInput && document.activeElement !== input)
+		{
+			input.value = searchInput.value;
+		}
+		clear.hidden = !filtersActive();
 	}
 
-	sections.forEach(build);
 	document.addEventListener('mysp:filters-applied', render);
 	render();
 })();

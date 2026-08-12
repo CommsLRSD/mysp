@@ -655,6 +655,7 @@
 			activeSection = target;
 			updateJumpState();
 			updateNextButtons();
+			document.dispatchEvent(new CustomEvent('mysp:section-changed', { detail: { sectionId: target.id } }));
 			if (options.updateHash !== false)
 			{
 				if (location.hash !== ('#' + target.id))
@@ -1348,23 +1349,20 @@
 	narrowMq.addEventListener ? narrowMq.addEventListener('change', syncPanel) : narrowMq.addListener(syncPanel);
 	syncPanel();
 
-	/* Hide the filter tab entirely when the user has scrolled past the
-	   priorities section into Looking Ahead / Words We Use / Tell Us What
-	   You Think – it has no function there. */
-	var prioritiesMain = document.getElementById('priorities-main');
-	if (prioritiesMain && window.IntersectionObserver) {
-		var sectionObserver = new IntersectionObserver(function (entries) {
-			entries.forEach(function (entry) {
-				if (!entry.isIntersecting) {
-					if (narrowMq.matches) { setPanelOpen(false); }
-					filterBar.classList.add('ptb-out');
-				} else {
-					filterBar.classList.remove('ptb-out');
-				}
-			});
-		}, { threshold: 0 });
-		sectionObserver.observe(prioritiesMain);
+	/* Hide the filter tab entirely when the active section is not one of the four
+	   priority sections (Looking Ahead, Words We Use, Tell Us What You Think, etc.
+	   have no use for this panel). */
+	var PRIORITY_SECTION_IDS_PTB = ['section-belonging', 'section-mastery', 'section-independence', 'section-generosity'];
+	function applyPtbOut(sectionId)
+	{
+		var inPriorities = PRIORITY_SECTION_IDS_PTB.indexOf(sectionId) !== -1;
+		filterBar.classList.toggle('ptb-out', !inPriorities);
+		if (!inPriorities && narrowMq.matches) { setPanelOpen(false); }
 	}
+	document.addEventListener('mysp:section-changed', function (e) { applyPtbOut(e.detail.sectionId); });
+	/* Sync on init – the mysp:section-changed event fires before this IIFE runs. */
+	var initialActive = document.querySelector('section.single-section-active');
+	applyPtbOut(initialActive ? initialActive.id : '');
 
 	/* clearBtn.hidden is set AFTER applyFilters dispatches its event, so it
 	   would always be one pass stale here. Read the controls instead. */

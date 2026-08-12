@@ -793,8 +793,8 @@
 	@media (max-width: 768px) {
 		.wide-hero { margin: 1rem 1.25rem 1.5rem; padding: 1.5rem 1.25rem; }
 		.side-nav-inner { padding: 1rem 1.25rem 1rem; gap: 0.9rem; }
-		.onpage-nav { display: flex; flex-direction: row; flex-wrap: wrap; gap: 0.35rem; }
-		.onpage-link { border: 1px solid rgba(38,78,116,0.18); border-left: 1px solid rgba(38,78,116,0.18); background: var(--white); font-size: 0.74rem; padding: 0.28rem 0.6rem; border-radius: 999px; }
+		.onpage-nav { display: flex; flex-direction: column; gap: 0.1rem; }
+		.onpage-link { border: none; border-left: 2px solid transparent; background: none; font-size: 0.8rem; padding: 0.32rem 0.6rem; border-radius: 6px; }
 		.priority-nav { flex-direction: column; gap: 0.25rem; padding-top: 0; }
 		.pnav-item, .pnav-item-all { padding: 0.6rem 0.75rem; border: 1px solid transparent; border-radius: 10px; }
 		.pnav-item.active, .pnav-item-all.active { border-color: rgba(38,78,116,0.15); }
@@ -1710,6 +1710,17 @@ section.single-section-active {
 		background: var(--white);
 		border-radius: 16px 0 0 16px;
 		box-shadow: var(--shadow-medium);
+		transition: opacity 0.15s ease;
+	}
+	/* When closed, hide the panel – only the small blue toggle tab stays visible. */
+	#priorities-filter-bar:not(.ptb-open) .priority-toolbar {
+		opacity: 0;
+		pointer-events: none;
+	}
+	/* Hide entirely when the user has scrolled out of the priorities section. */
+	#priorities-filter-bar.ptb-out {
+		visibility: hidden;
+		pointer-events: none;
 	}
 }
 

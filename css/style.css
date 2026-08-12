@@ -114,6 +114,7 @@
 	
 	.pnav-badge {
 		background: rgba(38, 78, 116, 0.08); color: var(--primary); font-size: 0.65rem; font-weight: 700; padding: 0.1rem 0.45rem; border-radius: 999px; flex-shrink: 0; border: 1px solid rgba(38, 78, 116, 0.15);
+		display: none;
 	}
 	/* ── Sidebar filter section ── */
 	

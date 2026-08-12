@@ -74,21 +74,6 @@
 				var searchMatch = (searchTerm === '') || (searchIndex.get(card) || '').indexOf(searchTerm) !== -1;
 				card.classList.toggle('js-filtered-out', !(stageMatch && dataMatch && searchMatch));
 			});
-			var totalVisible = 0;
-			document.querySelectorAll('.wide-section').forEach(function(section)
-			{
-				var sectionId = section.id.replace('section-', '');
-				var visibleCards = section.classList.contains('priority-hidden') ? 0 : section.querySelectorAll('.scorecard:not(.js-filtered-out)').length;
-				totalVisible += visibleCards;
-				var navItem = document.querySelector('.pnav-item[data-section="' + sectionId + '"]');
-				if (navItem)
-				{
-					var badge = navItem.querySelector('.pnav-badge');
-					if (badge) badge.textContent = visibleCards;
-				}
-			});
-			var badgeAll = document.getElementById('badge-all');
-			if (badgeAll) badgeAll.textContent = totalVisible;
 			document.querySelectorAll('.wide-section:not(.priority-hidden)').forEach(function(section)
 			{
 				var visible = section.querySelectorAll('.scorecard:not(.js-filtered-out)').length;
@@ -1211,6 +1196,11 @@
 		return (title ? title.textContent : el.textContent).trim();
 	}
 
+	function stripTrailingCount(text)
+	{
+		return text.replace(/\s*\(\d+\)\s*$/, '').trim();
+	}
+
 	function radioRow(label, sourceButtons, entries, groupName)
 	{
 		var row = document.createElement('div');
@@ -1235,9 +1225,16 @@
 			if (source.classList.contains('active')) { inp.checked = true; }
 			inp.addEventListener('change', function () { source.click(); });
 			lbl.appendChild(inp);
-			lbl.appendChild(document.createTextNode('\u00a0' + labelOf(source)));
+			var textNode = document.createTextNode('\u00a0' + stripTrailingCount(labelOf(source)));
+			lbl.appendChild(textNode);
 			list.appendChild(lbl);
-			entries.push({ radio: inp, source: source });
+			entries.push({
+				radio: inp,
+				source: source,
+				group: groupName,
+				labelNode: textNode,
+				baseLabel: stripTrailingCount(labelOf(source))
+			});
 		});
 		row.appendChild(list);
 		return row;
@@ -1318,6 +1315,61 @@
 		return !allDefault || !!(searchInput && searchInput.value.trim());
 	}
 
+	function activeAttr(sourceButtons, attrName, fallback)
+	{
+		var active = sourceButtons.find(function (el) { return el.classList.contains('active'); });
+		return active ? active.getAttribute(attrName) : fallback;
+	}
+
+	function renderOptionCounts()
+	{
+		var activePriority = activeAttr(sourcePriorities, 'data-section', 'all');
+		var activeStage = activeAttr(sourceStages, 'data-stage', 'all');
+		var activeData = activeAttr(sourceData, 'data-datahub-filter', 'all');
+		var term = (searchInput && searchInput.value ? searchInput.value.trim().toLowerCase() : '');
+		var stageCounts = { emerging: 0, developing: 0, embedded: 0 };
+		var dataCounts = { has: 0, none: 0 };
+
+		document.querySelectorAll('.scorecard').forEach(function (card)
+		{
+			var section = card.closest('.wide-section');
+			var cardPriority = section ? section.id.replace('section-', '') : '';
+			var cardStage = card.getAttribute('data-stage');
+			var hasData = (card.getAttribute('data-datahub') || '') !== '';
+			var cardData = hasData ? 'has' : 'none';
+			var cardSearch = (card.textContent || '').toLowerCase();
+			var priorityMatch = (activePriority === 'all') || (cardPriority === activePriority);
+			var searchMatch = (term === '') || (cardSearch.indexOf(term) !== -1);
+
+			if (priorityMatch && searchMatch && ((activeData === 'all') || (cardData === activeData)))
+			{
+				if (Object.prototype.hasOwnProperty.call(stageCounts, cardStage)) stageCounts[cardStage]++;
+			}
+			if (priorityMatch && searchMatch && ((activeStage === 'all') || (cardStage === activeStage)))
+			{
+				dataCounts[cardData]++;
+			}
+		});
+
+		entries.forEach(function (entry)
+		{
+			if (!entry.labelNode) return;
+			if (entry.group === 'stage')
+			{
+				var stageValue = entry.source.getAttribute('data-stage');
+				if (stageValue === 'all') entry.labelNode.textContent = '\u00a0' + entry.baseLabel;
+				else entry.labelNode.textContent = '\u00a0' + entry.baseLabel + ' (' + stageCounts[stageValue] + ')';
+				return;
+			}
+			if (entry.group === 'data')
+			{
+				var dataValue = entry.source.getAttribute('data-datahub-filter');
+				if (dataValue === 'all') entry.labelNode.textContent = '\u00a0' + entry.baseLabel;
+				else entry.labelNode.textContent = '\u00a0' + entry.baseLabel + ' (' + dataCounts[dataValue] + ')';
+			}
+		});
+	}
+
 	function render()
 	{
 		entries.forEach(function (entry)
@@ -1337,6 +1389,7 @@
 		{
 			input.value = searchInput.value;
 		}
+		renderOptionCounts();
 		clear.hidden = !filtersActive();
 	}
 

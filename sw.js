@@ -16,9 +16,11 @@ self.addEventListener('install', function (event)
 		caches.open(CACHE_NAME).then(function (cache)
 		{
 			return cache.addAll(CORE_ASSETS);
+		}).then(function ()
+		{
+			return self.skipWaiting();
 		})
 	);
-	self.skipWaiting();
 });
 
 self.addEventListener('activate', function (event)

@@ -351,6 +351,7 @@
 			if (!overlay || !popupBody || !closeX || !closeBtn || !gotoBtn) return;
 
 			var currentTarget = null;
+			var triggerEl = null;
 
 			function wireDetailTabs(details)
 			{
@@ -384,15 +385,18 @@
 				});
 			}
 
-			function openPopup(targetHref, label)
+			function openPopup(targetHref, label, trigger)
 			{
 				var card = document.querySelector(targetHref);
 				if (!card) return false;
 				currentTarget = targetHref;
+				triggerEl = trigger || null;
 
 				popupBody.innerHTML = '';
 				var clone = card.cloneNode(true);
+				// Strip all id attributes from the clone to prevent duplicate ids in the DOM
 				clone.removeAttribute('id');
+				clone.querySelectorAll('[id]').forEach(function(el) { el.removeAttribute('id'); });
 				var clonedDetails = clone.querySelector('.card-details');
 				if (clonedDetails)
 				{
@@ -425,6 +429,7 @@
 				overlay.setAttribute('aria-hidden', 'true');
 				document.body.style.overflow = '';
 				currentTarget = null;
+				if (triggerEl) { triggerEl.focus(); triggerEl = null; }
 			}
 
 			closeX.addEventListener('click', closePopup);
@@ -454,7 +459,7 @@
 				{
 					var targetHref = link.getAttribute('href');
 					var label = link.getAttribute('aria-label') || link.textContent.trim();
-					if (openPopup(targetHref, label)) e.preventDefault();
+					if (openPopup(targetHref, label, link)) e.preventDefault();
 				});
 			});
 		}());

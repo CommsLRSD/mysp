@@ -6552,6 +6552,7 @@
 			if (!overlay || !popupBody || !closeX || !closeBtn || !gotoBtn) return;
 
 			var currentTarget = null;
+			var triggerEl = null;
 
 			function wireDetailTabs(details)
 			{
@@ -6585,17 +6586,19 @@
 				});
 			}
 
-			function openPopup(targetHref, label)
+			function openPopup(targetHref, label, trigger)
 			{
 				var card = document.querySelector(targetHref);
 				if (!card) return false;
 				currentTarget = targetHref;
+				triggerEl = trigger || null;
 
 				// Clone the card content into the popup body
 				popupBody.innerHTML = '';
 				var clone = card.cloneNode(true);
-				// Remove the id so there are no duplicate ids on the page
+				// Strip all id attributes from the clone to prevent duplicate ids in the DOM
 				clone.removeAttribute('id');
+				clone.querySelectorAll('[id]').forEach(function(el) { el.removeAttribute('id'); });
 				// Open the details element in the clone
 				var clonedDetails = clone.querySelector('.card-details');
 				if (clonedDetails)
@@ -6631,6 +6634,7 @@
 				overlay.setAttribute('aria-hidden', 'true');
 				document.body.style.overflow = '';
 				currentTarget = null;
+				if (triggerEl) { triggerEl.focus(); triggerEl = null; }
 			}
 
 			closeX.addEventListener('click', closePopup);
@@ -6662,7 +6666,7 @@
 				{
 					var targetHref = link.getAttribute('href');
 					var label = link.getAttribute('aria-label') || link.textContent.trim();
-					if (openPopup(targetHref, label)) e.preventDefault();
+					if (openPopup(targetHref, label, link)) e.preventDefault();
 				});
 			});
 		}());
@@ -6987,8 +6991,8 @@
 	})();
 	</script>
 <!-- ══════════ CMS CONTENT ENDS HERE ══════════ -->
-<div id="action-popup-overlay" role="dialog" aria-modal="true" aria-labelledby="action-popup-title">
-	<div id="action-popup">
+<div id="action-popup-overlay">
+	<div id="action-popup" role="dialog" aria-modal="true" aria-labelledby="action-popup-title">
 		<div id="action-popup-header">
 			<p id="action-popup-title">Strategic Action</p>
 			<button id="action-popup-close-x" aria-label="Close">&times;</button>

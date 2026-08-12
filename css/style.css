@@ -1696,7 +1696,7 @@ section.single-section-active {
 		flex-direction: column;
 	}
 	#filter-control-source {
-		display: none !important;
+		display: none;
 	}
 	#priorities-filter-bar {
 		display: block;

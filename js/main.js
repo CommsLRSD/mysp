@@ -121,21 +121,22 @@
 		function showPrioritiesView(priority)
 		{
 			var target = priority && priority !== 'all' ? document.getElementById('section-' + priority) : null;
+			var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 			if (window.MYSP && typeof window.MYSP.showAllPriorities === 'function')
 			{
 				window.MYSP.showAllPriorities({ scroll: !target });
 				if (target)
 				{
-					target.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+					target.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth' });
 				}
 				return;
 			}
 			if (target)
 			{
-				target.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+				target.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth' });
 				return;
 			}
-			window.scrollTo({ top: 0, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+			window.scrollTo({ top: 0, behavior: reducedMotion ? 'auto' : 'smooth' });
 		}
 
 		var priorityNav = document.getElementById('priority-nav');

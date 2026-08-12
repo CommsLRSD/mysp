@@ -106,7 +106,30 @@
 				}
 				else if (note) note.hidden = true;
 			});
-			document.dispatchEvent(new CustomEvent('mysp:filters-applied'));
+			// Update stage and datahub chip counts based on cards in priority-visible sections
+		var stageCounts = { emerging: 0, developing: 0, embedded: 0 };
+		var datahubCounts = { has: 0, none: 0 };
+		document.querySelectorAll('.wide-section:not(.priority-hidden) .scorecard').forEach(function(card)
+		{
+			var stage = card.getAttribute('data-stage');
+			if (stage && Object.prototype.hasOwnProperty.call(stageCounts, stage)) stageCounts[stage]++;
+			var hasData = (card.getAttribute('data-datahub') || '') !== '';
+			if (hasData) datahubCounts.has++; else datahubCounts.none++;
+		});
+		['emerging', 'developing', 'embedded'].forEach(function(s)
+		{
+			var chip = document.querySelector('.filter-chip[data-stage="' + s + '"]');
+			if (!chip) return;
+			var textNode = Array.from(chip.childNodes).find(function(n) { return n.nodeType === 3; });
+			var label = s.charAt(0).toUpperCase() + s.slice(1) + ' (' + stageCounts[s] + ')';
+			if (textNode) textNode.textContent = label;
+			else chip.appendChild(document.createTextNode(label));
+		});
+		var hasChip = document.querySelector('.filter-chip[data-datahub-filter="has"]');
+		if (hasChip) hasChip.textContent = 'Has public data (' + datahubCounts.has + ')';
+		var noneChip = document.querySelector('.filter-chip[data-datahub-filter="none"]');
+		if (noneChip) noneChip.textContent = 'No public source yet (' + datahubCounts.none + ')';
+		document.dispatchEvent(new CustomEvent('mysp:filters-applied'));
 		}
 
 		function syncPriorityChips(priority)

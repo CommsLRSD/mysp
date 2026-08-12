@@ -604,24 +604,21 @@
 			{
 				id: 'section-change',
 				file: 'nutrition.jpg',
-				alt: 'Students sharing a meal in school',
-				caption: 'Nutrition programs are one of the most visible changes on the dashboard.'
+				alt: 'Students sharing a meal in school'
 			},
 			{
 				id: 'section-foundations',
 				file: 'indigenous-ed.jpg',
-				alt: 'Classroom activity grounded in Indigenous learning',
-				caption: 'Closing equity gaps remains the central foundation for the next cycle.'
+				alt: 'Classroom activity grounded in Indigenous learning'
 			},
 			{
 				id: 'section-ahead',
 				file: 'sustainability.jpg',
-				alt: 'Students collaborating outdoors',
-				caption: 'The next cycle focuses on sustainable systems that hold over time.'
+				alt: 'Students collaborating outdoors'
 			}
 		].forEach(function (entry)
 		{
-			appendSectionImage(entry.id, entry.file, entry.alt, entry.caption);
+			appendSectionImage(entry.id, entry.file, entry.alt);
 		});
 		addNextButtons();
 

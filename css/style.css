@@ -793,7 +793,7 @@
 	@media (max-width: 768px) {
 		.wide-hero { margin: 1rem 1.25rem 1.5rem; padding: 1.5rem 1.25rem; }
 		.side-nav-inner { padding: 1rem 1.25rem 1rem; gap: 0.9rem; }
-		.onpage-nav { flex-direction: row; flex-wrap: wrap; gap: 0.35rem; }
+		.onpage-nav { display: flex; flex-direction: row; flex-wrap: wrap; gap: 0.35rem; }
 		.onpage-link { border: 1px solid rgba(38,78,116,0.18); border-left: 1px solid rgba(38,78,116,0.18); background: var(--white); font-size: 0.74rem; padding: 0.28rem 0.6rem; border-radius: 999px; }
 		.priority-nav { flex-direction: row; flex-wrap: wrap; gap: 0.35rem; padding-top: 0.5rem; }
 		.pnav-item, .pnav-item-all { padding: 0.4rem 0.6rem; border: 1px solid rgba(38,78,116,0.15); border-radius: 999px; }
@@ -801,6 +801,28 @@
 		.pnav-icon img { width: 16px; height: 16px; }
 		.pnav-num { display: none; }
 		.side-filter-section, .side-collapse { padding-top: 0.4rem; }
+		.side-collapse-summary { cursor: default; }
+		.side-collapse-summary::after { display: none; }
+		.onpage-select { display: none; }
+		.wide-section { overflow-x: clip; }
+		.wide-section-header { flex-wrap: wrap; gap: 0.9rem; }
+		.section-icon-wrap { width: 56px; height: 56px; border-radius: 12px; }
+		.section-icon-wrap img { width: 34px; height: 34px; }
+		.section-header-title { font-size: 1.6rem; }
+		.section-action-count { width: 100%; }
+		.cards-grid { gap: 0.75rem; }
+		.scorecard { min-width: 0; }
+		.card-band { padding: 1rem 1rem 0.95rem; gap: 0.75rem; }
+		.card-band-icon { width: 56px; height: 56px; }
+		.card-band-icon img { width: 34px; height: 34px; }
+		.card-band-number { font-size: 3.4rem; right: 0.15rem; }
+		.card-action-title,
+		.card-body,
+		.details-inner { padding-left: 1rem; padding-right: 1rem; }
+		.card-details summary { padding-left: 1rem; padding-right: 1rem; }
+		.js-ready .detail-tabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+		.detail-tab-btn { min-width: 0; padding: 0.45rem 0.3rem; font-size: 0.72rem; text-align: center; }
+		.pe-chip { width: 100%; }
 	}
 	@media (max-width: 520px) {
 		.change-pair { flex-direction: column; gap: 0.45rem; }
@@ -957,8 +979,8 @@
 	.wide-hero-icon img { width: 100%; height: auto; }
 	.onpage-select { display: none; width: 100%; padding: 0.6rem 0.75rem; font-size: 0.9rem; color: #223; background: var(--white); border: 1px solid rgba(38,78,116,0.2); border-radius: 8px; }
 	@media (max-width: 768px) {
-		.onpage-nav { display: none; }
-		.onpage-select { display: block; }
+		.onpage-nav { display: flex; }
+		.onpage-select { display: none; }
 	}
 	.totop { display: block; text-align: right; font-size: 0.78rem; font-weight: 600; color: rgba(38,78,116,0.65); text-decoration: none; margin: 1.2rem 0 0; }
 	.totop:hover { color: var(--primary); text-decoration: none; }
@@ -1031,7 +1053,7 @@
 	   ══════════════════════════════════════════════════════════ */
 
 	#section-bar {
-		position: fixed; top: 0; left: 0; right: 0; z-index: 800;
+		position: fixed; top: 0; left: 0; right: 0; z-index: 980;
 		display: none; align-items: center; gap: 0.6rem;
 		height: 52px; padding: 0 0.6rem;
 		/* 90% opacity keeps white text at 6.59:1 even over a white
@@ -1079,14 +1101,15 @@
 	@media (max-width: 768px) {
 		#section-bar { display: flex; }
 		#nav-close { display: inline-flex; }
+		#nav-scrim { top: 52px; }
 
 		/* The drawer is the SAME element as the desktop sidebar, moved by
 		   CSS only. No DOM is reparented, so every existing filter, chip
 		   and search selector keeps working untouched. */
 		#side-nav {
-			position: fixed; top: 0; left: 0; z-index: 950;
+			position: fixed; top: 52px; left: 0; z-index: 950;
 			width: min(86vw, 340px); max-width: 340px;
-			height: 100vh; height: 100dvh;
+			height: calc(100vh - 52px); height: calc(100dvh - 52px);
 			background: var(--white);
 			border-right: none; box-shadow: 4px 0 28px rgba(0, 0, 0, 0.22);
 			overflow-y: auto; -webkit-overflow-scrolling: touch;
@@ -1096,6 +1119,7 @@
 		}
 		#side-nav.open { transform: translateX(0); visibility: visible; }
 		body.nav-open { overflow: hidden; }
+		#wide-content { padding-top: 52px; }
 		/* Clears the fixed bar so anchor jumps do not land under it. */
 		html { scroll-padding-top: 60px; }
 		:target { scroll-margin-top: 60px; }
@@ -1660,20 +1684,63 @@ section.single-section-active {
 #priorities-filter-bar .priority-toolbar {
 	margin: 0;
 }
-/* On narrow viewports, stack filter above priorities */
+/* On narrow viewports, keep the filter available as a sticky side tab. */
 @media (max-width: 1100px) {
 	#priorities-layout {
 		flex-direction: column;
 	}
 	#priorities-filter-bar {
 		flex: none;
-		width: 100%;
-		position: static;
-		max-height: none;
+		width: min(21rem, calc(100vw - 0.75rem));
+		position: fixed;
+		top: 50%;
+		right: 0;
+		z-index: 970;
+		max-height: calc(100vh - 7rem);
+		max-height: calc(100dvh - 7rem);
 		overflow: visible;
+		transform: translate(calc(100% - 3.35rem), -50%);
+		transition: transform 0.24s ease;
+		pointer-events: auto;
 	}
+	#priorities-filter-bar.ptb-open { transform: translate(0, -50%); }
 	#priorities-filter-bar .priority-toolbar {
-		margin: 0 0 1.5rem;
+		margin: 0;
+		padding-left: 4.15rem;
+		background: var(--white);
+		border-radius: 16px 0 0 16px;
+		box-shadow: var(--shadow-medium);
+	}
+}
+
+.ptb-mobile-toggle { display: none; }
+@media (max-width: 1100px) {
+	.ptb-mobile-toggle {
+		position: absolute;
+		inset: 0 auto 0 0;
+		width: 3.35rem;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0.85rem 0.35rem;
+		border: 0;
+		border-right: 1px solid rgba(38, 78, 116, 0.14);
+		border-radius: 16px 0 0 16px;
+		background: var(--primary);
+		color: #fff;
+		font-family: var(--header-font);
+		font-size: 0.74rem;
+		font-weight: 700;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		writing-mode: vertical-rl;
+		transform: rotate(180deg);
+		cursor: pointer;
+		box-shadow: 0 10px 28px rgba(18, 34, 52, 0.18);
+	}
+	.ptb-mobile-toggle:focus-visible {
+		outline: 3px solid #fff;
+		outline-offset: -4px;
 	}
 }
 
@@ -1691,7 +1758,8 @@ section.single-section-active {
 	}
 	.wide-hero { padding: 1.75rem 1.5rem 1.25rem; }
 	.ptb-label { flex-basis: 100%; }
-	#priorities-filter-bar .priority-toolbar { margin: 0 1rem 1.5rem; }
+	#priorities-filter-bar { width: min(20rem, calc(100vw - 0.75rem)); }
+	#priorities-filter-bar .priority-toolbar { margin: 0; }
 }
 @media (max-width: 768px) {
 	.story-section,
@@ -1701,7 +1769,14 @@ section.single-section-active {
 	}
 	.story-body p { font-size: 1rem; }
 	.side-panel { padding: 0.8rem; }
-	#priorities-filter-bar .priority-toolbar { margin: 0 0.75rem 1rem; }
+	#priorities-filter-bar {
+		top: calc(52px + 1rem);
+		transform: translate(calc(100% - 3.35rem), 0);
+		max-height: calc(100vh - 72px);
+		max-height: calc(100dvh - 72px);
+	}
+	#priorities-filter-bar.ptb-open { transform: translate(0, 0); }
+	#priorities-filter-bar .priority-toolbar { margin: 0; }
 }
 
 @media print {

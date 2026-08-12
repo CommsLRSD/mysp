@@ -1,11 +1,5 @@
 (function()
 	{
-
-		// Collapse sidebar groups by default on phones
-		if (window.innerWidth <= 768)
-		{
-			document.querySelectorAll('.side-collapse').forEach(function(d) { d.removeAttribute('open'); });
-		}
 		var wrapper = document.getElementById('wide-wrapper');
 		if (wrapper) wrapper.classList.add('js-ready');
 
@@ -871,8 +865,7 @@
 			}
 			function update() {
 				if (!mq.matches) { bar.classList.remove('visible'); return; }
-				var past = hero ? (hero.getBoundingClientRect().bottom < BAR_H) : (window.scrollY > 120);
-				bar.classList.toggle('visible', past);
+				bar.classList.add('visible');
 				var next = currentLabel();
 				if (label.textContent !== next) label.textContent = next;
 			}
@@ -899,8 +892,14 @@
 					drawer.querySelectorAll('a[href], button:not([disabled]), input, select, textarea, summary, [tabindex]:not([tabindex="-1"])'),
 					function (n) { return n.offsetWidth > 0 || n.offsetHeight > 0; });
 			}
+			var drawerSections = Array.prototype.slice.call(drawer.querySelectorAll('.side-collapse'));
+			function keepDrawerSectionsOpen() {
+				if (!mq.matches) return;
+				drawerSections.forEach(function (section) { section.open = true; });
+			}
 			function openNav() {
 				if (!mq.matches) return;
+				keepDrawerSectionsOpen();
 				drawer.classList.add('open');
 				scrim.classList.add('visible');
 				document.body.classList.add('nav-open');
@@ -941,6 +940,12 @@
 			/* Picking anything inside the drawer should dismiss it, or the
 			   result is hidden behind the panel the person just used. */
 			drawer.addEventListener('click', function (e) {
+				var summary = e.target.closest('.side-collapse-summary');
+				if (summary && mq.matches) {
+					e.preventDefault();
+					keepDrawerSectionsOpen();
+					return;
+				}
 				if (!isOpen()) return;
 				if (e.target.closest('a[href], .onpage-link, .pnav-item, .pnav-item-all, .filter-chip, .clear-filters')) {
 					setTimeout(function () { closeNav(); }, 60);
@@ -952,8 +957,13 @@
 
 			/* Leaving mobile width with the drawer open would strand the page
 			   scroll-locked behind an invisible panel. */
-			function onMQ() { if (!mq.matches && isOpen()) closeNav(false); update(); }
+			function onMQ() {
+				if (mq.matches) keepDrawerSectionsOpen();
+				else if (isOpen()) closeNav(false);
+				update();
+			}
 			mq.addEventListener ? mq.addEventListener('change', onMQ) : mq.addListener(onMQ);
+			keepDrawerSectionsOpen();
 		})();
 
 /* ══════════════════════════════════════════════════════════════════
@@ -1243,6 +1253,13 @@
 	var bar = document.createElement('div');
 	bar.className = 'priority-toolbar';
 
+	var mobileToggle = document.createElement('button');
+	mobileToggle.type = 'button';
+	mobileToggle.className = 'ptb-mobile-toggle';
+	mobileToggle.setAttribute('aria-controls', 'priorities-filter-bar');
+	mobileToggle.setAttribute('aria-expanded', 'false');
+	mobileToggle.textContent = 'Review & filter';
+
 	var head = document.createElement('div');
 	head.className = 'ptb-head';
 	var titleEl = document.createElement('p');
@@ -1298,7 +1315,32 @@
 		});
 	}
 
+	filterBar.appendChild(mobileToggle);
 	filterBar.appendChild(bar);
+
+	var narrowMq = window.matchMedia('(max-width: 1100px)');
+	function setPanelOpen(open)
+	{
+		var next = !!open && narrowMq.matches;
+		filterBar.classList.toggle('ptb-open', next);
+		mobileToggle.setAttribute('aria-expanded', next ? 'true' : 'false');
+		mobileToggle.textContent = next ? 'Close filters' : 'Review & filter';
+	}
+	function syncPanel()
+	{
+		if (!narrowMq.matches) { setPanelOpen(false); }
+	}
+	mobileToggle.addEventListener('click', function ()
+	{
+		if (!narrowMq.matches) { return; }
+		setPanelOpen(!filterBar.classList.contains('ptb-open'));
+	});
+	document.addEventListener('keydown', function (e)
+	{
+		if (e.key === 'Escape' && filterBar.classList.contains('ptb-open')) { setPanelOpen(false); }
+	});
+	narrowMq.addEventListener ? narrowMq.addEventListener('change', syncPanel) : narrowMq.addListener(syncPanel);
+	syncPanel();
 
 	/* clearBtn.hidden is set AFTER applyFilters dispatches its event, so it
 	   would always be one pass stale here. Read the controls instead. */

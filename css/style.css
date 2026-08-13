@@ -1794,9 +1794,18 @@ section.single-section-active {
 	}
 	.story-body p { font-size: 1rem; }
 	.side-panel { padding: 0.8rem; }
+	/* Default: match the desktop-narrow appearance (top: 1rem, no section bar). */
 	#priorities-filter-bar {
-		top: calc(var(--mobile-section-bar-h) + 1rem);
+		top: 1rem;
 		transform: translateX(calc(100% - 2rem));
+		max-height: calc(100vh - 2rem);
+		max-height: calc(100dvh - 2rem);
+		transition: transform 0.24s ease, top 0.22s ease, max-height 0.22s ease;
+	}
+	/* Once the mobile section bar slides into view, shift the filter tab down
+	   in sync with the section bar's own 0.22s entrance transition. */
+	body:has(#section-bar.visible) #priorities-filter-bar {
+		top: calc(var(--mobile-section-bar-h) + 1rem);
 		max-height: calc(100vh - var(--mobile-section-bar-h) - 2rem);
 		max-height: calc(100dvh - var(--mobile-section-bar-h) - 2rem);
 	}

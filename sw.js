@@ -1,4 +1,4 @@
-var CACHE_NAME = 'mysp-shell-v1';
+var CACHE_NAME = 'mysp-shell-v2';
 var CACHE_PREFIX = 'mysp-';
 var CORE_ASSETS = [
 	'/mysp/',
@@ -49,22 +49,29 @@ self.addEventListener('fetch', function (event)
 	if (url.origin !== self.location.origin) return;
 
 	event.respondWith(
-		caches.match(event.request).then(function (cached)
+		caches.open(CACHE_NAME).then(function (cache)
 		{
-			if (cached) return cached;
-			return fetch(event.request).then(function (response)
+			return cache.match(event.request).then(function (cached)
 			{
-				if (!response) throw new Error('Empty network response');
-				if (response.status !== 200 || response.type !== 'basic') return response;
-				var responseClone = response.clone();
-				caches.open(CACHE_NAME).then(function (cache)
+				var revalidate = fetch(event.request).then(function (response)
 				{
-					return cache.put(event.request, responseClone);
-				}).catch(function () {});
-				return response;
-			}).catch(function ()
-			{
-				return caches.match('/mysp/index.html');
+					if (response && response.status === 200 && response.type === 'basic')
+					{
+						cache.put(event.request, response.clone()).catch(function () {});
+					}
+					return response;
+				});
+
+				if (cached)
+				{
+					revalidate.catch(function () {});
+					return cached;
+				}
+
+				return revalidate.catch(function ()
+				{
+					return caches.match('/mysp/index.html');
+				});
 			});
 		})
 	);

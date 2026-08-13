@@ -1082,7 +1082,7 @@
 	#nav-toggle:focus-visible, #nav-close:focus-visible {
 		outline: 3px solid var(--blue); outline-offset: -3px;
 	}
-	#nav-close { display: none; color: var(--primary); align-self: flex-end; margin: -0.25rem -0.4rem 0 0; }
+	#nav-close { display: none; align-self: flex-end; margin: -0.25rem -0.4rem 0 0; }
 
 	#nav-scrim {
 		position: fixed; inset: 0; z-index: 900;

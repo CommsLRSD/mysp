@@ -1365,7 +1365,7 @@
 	{
 		var active = document.querySelector('section.single-section-active:not(.single-section-hidden)');
 		if (active && active.id) { return active.id; }
-		var hash = (window.location && window.location.hash ? window.location.hash.replace(/^#/, '') : '');
+		var hash = window.location.hash.replace(/^#/, '');
 		if (hash) { return hash; }
 		return '';
 	}

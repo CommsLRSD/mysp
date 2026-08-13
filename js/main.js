@@ -1361,10 +1361,30 @@
 		filterBar.classList.toggle('ptb-out', !inPriorities);
 		if (!inPriorities && narrowMq.matches) { setPanelOpen(false); }
 	}
-	document.addEventListener('mysp:section-changed', function (e) { applyPtbOut(e.detail.sectionId); });
-	/* Sync on init – the mysp:section-changed event fires before this IIFE runs. */
-	var initialActive = document.querySelector('section.single-section-active');
-	applyPtbOut(initialActive ? initialActive.id : '');
+	function currentSectionId()
+	{
+		var active = document.querySelector('section.single-section-active:not(.single-section-hidden)');
+		if (active && active.id) { return active.id; }
+		var hash = (window.location && window.location.hash ? window.location.hash.replace(/^#/, '') : '');
+		if (hash) { return hash; }
+		return '';
+	}
+	function syncPtbOutFromDom()
+	{
+		applyPtbOut(currentSectionId());
+	}
+	document.addEventListener('mysp:section-changed', function (e)
+	{
+		var sectionId = e && e.detail && e.detail.sectionId ? e.detail.sectionId : currentSectionId();
+		applyPtbOut(sectionId);
+	});
+	/* Keep the panel state in sync even when navigation/filter flows don't emit
+	   section-changed in the expected order on desktop. */
+	document.addEventListener('mysp:filters-applied', syncPtbOutFromDom);
+	window.addEventListener('hashchange', syncPtbOutFromDom);
+	window.addEventListener('popstate', syncPtbOutFromDom);
+	/* Sync on init – section-changed can fire before this IIFE runs. */
+	syncPtbOutFromDom();
 
 	/* clearBtn.hidden is set AFTER applyFilters dispatches its event, so it
 	   would always be one pass stale here. Read the controls instead. */

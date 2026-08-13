@@ -1056,36 +1056,33 @@
 		position: fixed; top: 0; left: 0; right: 0; z-index: 980;
 		display: none; align-items: center; gap: 0.6rem;
 		height: var(--mobile-section-bar-h); padding: 0 0.6rem;
-		/* 90% opacity keeps white text at 6.59:1 even over a white
-		   background. Do not lower it: at ~70% the label becomes
-		   unreadable wherever pale content scrolls underneath. */
-		background: rgba(38, 78, 116, 0.90);
-		-webkit-backdrop-filter: blur(12px) saturate(1.4);
-		backdrop-filter: blur(12px) saturate(1.4);
-		border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+		background: rgba(255, 255, 255, 0.92);
+		-webkit-backdrop-filter: blur(16px) saturate(1.25);
+		backdrop-filter: blur(16px) saturate(1.25);
+		border-bottom: 1px solid rgba(38, 78, 116, 0.10);
+		box-shadow: 0 10px 28px rgba(18, 41, 63, 0.08);
 		transform: translateY(-100%); transition: transform 0.22s ease;
 	}
 	#section-bar.visible { transform: translateY(0); }
 	@supports not ((backdrop-filter: blur(2px)) or (-webkit-backdrop-filter: blur(2px))) {
-		#section-bar { background: #264e74; }
+		#section-bar { background: #ffffff; }
 	}
 	#section-bar-label {
 		margin: 0; flex: 1; min-width: 0;
 		font-family: var(--header-font); font-size: 0.82rem; font-weight: 700;
-		letter-spacing: 0.02em; color: #fff;
+		letter-spacing: 0.02em; color: var(--primary);
 		white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 	}
 	#nav-toggle, #nav-close {
 		flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center;
 		width: 44px; height: 44px; padding: 0; border: none; border-radius: 10px;
-		background: transparent; color: #fff; cursor: pointer;
+		background: transparent; color: var(--primary); cursor: pointer;
 	}
-	#nav-toggle:hover { background: rgba(255, 255, 255, 0.14); }
+	#nav-toggle:hover, #nav-close:hover { background: rgba(38, 78, 116, 0.08); }
 	#nav-toggle:focus-visible, #nav-close:focus-visible {
-		outline: 3px solid #fff; outline-offset: -3px;
+		outline: 3px solid var(--blue); outline-offset: -3px;
 	}
 	#nav-close { display: none; color: var(--primary); align-self: flex-end; margin: -0.25rem -0.4rem 0 0; }
-	#nav-close:hover { background: rgba(38, 78, 116, 0.09); }
 
 	#nav-scrim {
 		position: fixed; inset: 0; z-index: 900;

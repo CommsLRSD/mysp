@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#264e74">
+<meta name="theme-color" content="#ffffff">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>Multi-Year Strategic Plan 2023&ndash;2027 | Integrated Redesign</title>
 <link rel="icon" type="image/svg+xml" href="/mysp/public/images/mysp-favicon.svg">
@@ -631,13 +631,10 @@
                   same words twice in the top third of a phone. This one appears only
                   after the hero scrolls past and shows the current section, read live
                   from each section's own h2 so it cannot drift if a heading is renamed.
-                  Background is rgba(38,78,116,0.90) plus blur. The opacity is the point:
-                  the Building Review's bar was measured from the screenshots at 3.63:1
-                  over the page and 1.91:1 over the hero photo, so its label fails WCAG
-                  at some scroll positions and passes at others. At 0.90 the floor is
-                  6.59:1 against a white background and better against anything darker.
-                  Do not lower it. -webkit- prefix included, and an @supports fallback
-                  paints the bar fully opaque where backdrop-filter is unavailable.
+                  Background is near-opaque white with blur, so content still softens as
+                  it passes beneath but the bar reads as a solid layer instead of a tinted
+                  overlay. Label and icon colour are the plan blue, and the fallback stays
+                  fully opaque white where backdrop-filter is unavailable.
                   DRAWER. The drawer IS the existing #side-nav, moved by CSS alone. No
                   DOM was reparented, so every filter, chip, search and priority selector
                   in the existing JS keeps working untouched: that was the main design

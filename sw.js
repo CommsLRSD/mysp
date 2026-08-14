@@ -68,7 +68,7 @@ self.addEventListener('fetch', function (event)
 					{
 						return caches.match('/mysp/index.html');
 					}
-					return new Response('', { status: 503, statusText: 'Offline' });
+					return new Response('', { status: 503, statusText: 'Service Unavailable' });
 				});
 			});
 		})

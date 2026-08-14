@@ -51,26 +51,24 @@ self.addEventListener('fetch', function (event)
 	event.respondWith(
 		caches.open(CACHE_NAME).then(function (cache)
 		{
-			return cache.match(event.request).then(function (cached)
+			var networkRequest = new Request(event.request, { cache: 'no-store' });
+			return fetch(networkRequest).then(function (response)
 			{
-				var revalidate = fetch(event.request).then(function (response)
+				if (response && response.status === 200 && response.type === 'basic')
 				{
-					if (response && response.status === 200 && response.type === 'basic')
-					{
-						cache.put(event.request, response.clone()).catch(function () {});
-					}
-					return response;
-				});
-
-				if (cached)
-				{
-					revalidate.catch(function () {});
-					return cached;
+					cache.put(event.request, response.clone()).catch(function () {});
 				}
-
-				return revalidate.catch(function ()
+				return response;
+			}).catch(function ()
+			{
+				return cache.match(event.request).then(function (cached)
 				{
-					return caches.match('/mysp/index.html');
+					if (cached) return cached;
+					if (event.request.mode === 'navigate')
+					{
+						return caches.match('/mysp/index.html');
+					}
+					return Response.error();
 				});
 			});
 		})

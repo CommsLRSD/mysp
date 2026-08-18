@@ -470,6 +470,10 @@
 	.card-summary {
 		font-size: 0.9rem; line-height: 1.65; color: #444; margin: 0;
 	}
+
+	.card-summary + .card-summary {
+		margin-top: 0.55rem;
+	}
 	
 	.progress-tag {
 		display: inline-block; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--primary); background: rgba(38, 78, 116, 0.08); border-radius: 4px; padding: 0.12rem 0.45rem; margin: 0 0 0.45rem;
@@ -772,6 +776,7 @@
 	.field.attention { border-left-color: var(--yellow); }
 	.field-label { font-family: var(--header-font); font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #556; margin-bottom: 0.25rem; }
 	.field-body, .field-body p { font-size: 0.86rem; line-height: 1.65; color: #333; margin: 0; }
+	.field-body p + p { margin-top: 0.55rem; }
 	.evidence-list { margin: 0; padding-left: 1.1rem; }
 	.evidence-list li { font-size: 0.85rem; line-height: 1.6; margin-bottom: 0.2rem; color: #333; }
 	/* Foundations themes */

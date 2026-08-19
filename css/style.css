@@ -286,7 +286,7 @@
 	/* ── Card grid ── */
 	
 	.cards-grid {
-		display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; align-items: start;
+		display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 18.5rem), 1fr)); gap: 1.5rem; align-items: start;
 	}
 	/* ── Scorecard ── */
 	
@@ -671,13 +671,8 @@
 	}
 	/* ── Responsive ── */
 	
-	/* v19: base grid is 3 columns; the former 1500px breakpoint is retired */
-	
-	@media (max-width: 1200px) {
-		.cards-grid {
-			grid-template-columns: repeat(2, 1fr);
-		}
-	}
+	/* v86: let the action cards wrap by their own readable width instead of waiting
+	   for a late viewport breakpoint while the sidebar still steals space. */
 	
 	@media (max-width: 900px) {
 		:root {

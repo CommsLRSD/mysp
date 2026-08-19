@@ -286,7 +286,7 @@
 	/* ── Card grid ── */
 	
 	.cards-grid {
-		display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr)); gap: 1.5rem; align-items: start;
+		display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 18.5rem), 1fr)); gap: 1.5rem; align-items: start;
 	}
 	/* ── Scorecard ── */
 	

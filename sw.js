@@ -1,11 +1,10 @@
-var CACHE_NAME = 'mysp-shell-v2';
+var CACHE_NAME = 'mysp-shell-v3';
 var CACHE_PREFIX = 'mysp-';
 var CORE_ASSETS = [
 	'/mysp/',
 	'/mysp/index.html',
 	'/mysp/css/style.css',
 	'/mysp/js/main.js',
-	'/mysp/js/auth-gate.js',
 	'/mysp/manifest.webmanifest',
 	'/mysp/public/images/mysp-icon-192.png',
 	'/mysp/public/images/mysp-icon-512.png'

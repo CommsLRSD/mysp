@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Explore LRSD's Multi-Year Strategic Plan in Action</title>
+  <style>
+    :root {
+      --brand: #005596;
+      --brand-dark: #003b6a;
+      --text: #102130;
+      --bg: #f2f6fa;
+      --surface: #ffffff;
+      --soft: #dfe9f3;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Arial, Helvetica, sans-serif;
+      color: var(--text);
+      background: linear-gradient(180deg, #f7fbff 0%, var(--bg) 100%);
+      line-height: 1.65;
+    }
+
+    .hero {
+      min-height: 44vh;
+      color: #fff;
+      background:
+        linear-gradient(120deg, rgba(0, 59, 106, 0.78), rgba(0, 85, 150, 0.64)),
+        url("https://www2.lrsd.net/mysp/public/images/COD_0773.jpg") center/cover no-repeat;
+      display: grid;
+      place-items: end center;
+      padding: 2.5rem 1rem;
+    }
+
+    .hero-content {
+      width: min(1000px, 100%);
+      animation: rise 600ms ease-out;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 4.8vw, 3.2rem);
+      line-height: 1.2;
+      text-wrap: balance;
+    }
+
+    .subtitle {
+      margin-top: 0.9rem;
+      font-size: clamp(1rem, 1.8vw, 1.25rem);
+      max-width: 68ch;
+    }
+
+    .content {
+      width: min(1000px, 100%);
+      margin: -2.2rem auto 2.5rem;
+      padding: 0 1rem;
+    }
+
+    .card {
+      background: var(--surface);
+      border-radius: 16px;
+      border: 1px solid #d9e5f2;
+      box-shadow: 0 14px 38px rgba(8, 37, 69, 0.12);
+      padding: clamp(1.2rem, 3vw, 2rem);
+    }
+
+    p {
+      margin: 0 0 1rem;
+      font-size: 1.03rem;
+    }
+
+    .priorities {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.55rem;
+      margin: 1.25rem 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .priorities li {
+      background: #edf4fb;
+      color: #0e3a5b;
+      border: 1px solid #c6d9ec;
+      border-radius: 999px;
+      padding: 0.35rem 0.8rem;
+      font-size: 0.94rem;
+      font-weight: 600;
+    }
+
+    .actions {
+      margin-top: 1.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    .button {
+      display: inline-block;
+      text-decoration: none;
+      border-radius: 10px;
+      font-weight: 700;
+      padding: 0.82rem 1.15rem;
+      transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+    }
+
+    .button.primary {
+      background: var(--brand);
+      color: #fff;
+      box-shadow: 0 8px 16px rgba(0, 85, 150, 0.25);
+    }
+
+    .button.secondary {
+      background: var(--soft);
+      color: #0f3552;
+    }
+
+    .button:hover,
+    .button:focus-visible {
+      transform: translateY(-1px);
+    }
+
+    .button.primary:hover,
+    .button.primary:focus-visible {
+      background: var(--brand-dark);
+      box-shadow: 0 10px 20px rgba(0, 59, 106, 0.28);
+    }
+
+    .button.secondary:hover,
+    .button.secondary:focus-visible {
+      background: #d3e3f3;
+    }
+
+    @keyframes rise {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 640px) {
+      .hero {
+        min-height: 38vh;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div class="hero-content">
+      <h1>Explore LRSD's Multi-Year Strategic Plan in Action</h1>
+      <p class="subtitle">A transparent view of progress, learning, and next steps across LRSD's four strategic priorities.</p>
+    </div>
+  </header>
+
+  <main class="content">
+    <section class="card" aria-label="Introduction to the LRSD MYSP site">
+      <p>
+        The Multi-Year Strategic Plan (MYSP) 2023-2027 is more than a strategic document. It is a living record of how Louis Riel School Division is working toward its vision for students, staff, families and communities. This site brings together the division's goals, progress, evidence and learning in one accessible place.
+      </p>
+      <p>
+        Visitors can explore the plan's four priorities: Belonging, Mastery, Independence and Generosity, and see how strategic actions are progressing over time. The site highlights what has changed since the plan was launched, what the division is learning, and where further work is needed. Rather than presenting a simple scorecard, it offers a transparent look at successes, challenges and ongoing growth.
+      </p>
+      <ul class="priorities" aria-label="Strategic priorities">
+        <li>Belonging</li>
+        <li>Mastery</li>
+        <li>Independence</li>
+        <li>Generosity</li>
+      </ul>
+      <p>
+        You'll also find links to the full strategic plan, previous plans, annual reports to the community, supporting resources, and opportunities to provide feedback. Whether you're a staff member, parent, student or community member, this site offers a clear view of how LRSD is turning its commitments into action and measuring progress along the way.
+      </p>
+
+      <div class="actions">
+        <a class="button primary" href="https://www2.lrsd.net/mysp">Open the Strategic Plan App</a>
+        <a class="button secondary" href="https://www.lrsd.net">Visit LRSD Main Site</a>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
